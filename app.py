@@ -1,20 +1,27 @@
 import streamlit as st
-from openai import OpenAI
-import os
 
-st.title("🤖 AI Chat ذكي")
-
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+st.title("🛡️ Cyber AI Assistant (Free)")
 
 user_input = st.text_input("اكتب سؤالك:")
 
-if user_input:
-    response = client.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=[
-            {"role": "user", "content": user_input}
-        ]
-    )
+def simple_ai(question):
+    question = question.lower()
 
-    answer = response.choices[0].message.content
+    if "اختراق" in question or "hack" in question:
+        return "⚠️ هذا قد يكون هجوم إلكتروني. تأكد من تأمين النظام وتغيير كلمات المرور."
+
+    elif "فيروس" in question or "virus" in question:
+        return "🦠 قد يكون فيروس. استخدم مضاد فيروسات وقم بفحص الجهاز."
+
+    elif "ip" in question:
+        return "🌐 عنوان IP مهم في التتبع. تأكد من مراقبته وحظره إذا كان مشبوه."
+
+    elif "hello" in question or "مرحبا" in question:
+        return "👋 مرحبا! كيف يمكنني مساعدتك في الأمن السيبراني؟"
+
+    else:
+        return "🤖 لم أفهم سؤالك جيدًا، حاول إعادة صياغته."
+
+if user_input:
+    answer = simple_ai(user_input)
     st.write("🤖:", answer)
