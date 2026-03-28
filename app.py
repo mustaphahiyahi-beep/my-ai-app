@@ -8,19 +8,19 @@ def simple_ai(question):
     question = question.lower()
 
     if "اختراق" in question or "hack" in question:
-        return "⚠️ هذا قد يكون هجوم إلكتروني. تأكد من تأمين النظام وتغيير كلمات المرور."
+        return "⚠️ تحذير: نشاط مشبوه! تأكد من تغيير كلمات المرور وتفعيل الحماية."
 
     elif "فيروس" in question or "virus" in question:
-        return "🦠 قد يكون فيروس. استخدم مضاد فيروسات وقم بفحص الجهاز."
+        return "🦠 ربما يوجد فيروس. قم بفحص الجهاز باستخدام برنامج حماية."
 
     elif "ip" in question:
-        return "🌐 عنوان IP مهم في التتبع. تأكد من مراقبته وحظره إذا كان مشبوه."
+        return "🌐 تحقق من عنوان IP، وإذا كان غريب قم بحظره."
 
-    elif "hello" in question or "مرحبا" in question:
-        return "👋 مرحبا! كيف يمكنني مساعدتك في الأمن السيبراني؟"
+    elif "مرحبا" in question or "hello" in question:
+        return "👋 مرحبا! أنا مساعد الأمن السيبراني."
 
     else:
-        return "🤖 لم أفهم سؤالك جيدًا، حاول إعادة صياغته."
+        return "🤖 حاول توضيح سؤالك أكثر."
 
 if user_input:
     answer = simple_ai(user_input)
