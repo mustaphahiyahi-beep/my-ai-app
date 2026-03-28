@@ -1,18 +1,27 @@
-def ask_ai(question):
-    return "AI غير مفعل حالياً"
-    try:
 import streamlit as st
 
-    try:
-        import pandas as pd
-        import requests
+st.set_page_config(layout="wide")
 
-    st.set_page_config(layout="wide")
+st.title("🛡️ Cybersecurity AI Agent Pro")
 
-    st.title("🛡️ Cybersecurity AI Agent Pro")
+st.header("📊 Log Analyzer")
 
-    # باقي كودك هنا بالكامل 👇
-    # (لا تغيره فقط ضعه داخل try)
+logs = st.text_area("📥 أدخل Logs:")
 
-except Exception as e:
-    st.error(f"❌ خطأ في التطبيق: {str(e)}")
+if st.button("تحليل"):
+    if logs:
+        st.success("تم استلام البيانات ✅")
+        st.write(logs)
+    else:
+        st.warning("يرجى إدخال Logs")
+
+st.header("🤖 AI Cyber Assistant")
+
+question = st.text_input("💬 اسأل عن الأمن السيبراني:")
+
+if st.button("اسأل"):
+    if question:
+        st.success("سؤالك: ")
+        st.write(question)
+    else:
+        st.warning("اكتب سؤال أولاً")
