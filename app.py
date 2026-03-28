@@ -1,37 +1,59 @@
 import streamlit as st
-import requests
 
-st.title("🛡️ Cyber Security AI Agent")
+st.title("🛡️ Cybersecurity AI Agent Pro")
 
-API_KEY = "sk-72885bff6559440286c83919058fbcc6"
+user_input = st.text_area("📥 أدخل Logs أو سؤال:")
 
-user_input = st.text_area("📥 أدخل السؤال أو الـ Logs:")
+def analyze_security(log):
 
-def analyze_with_ai(text):
-    url = "https://api.deepseek.com/v1/chat/completions"
+    log = log.lower()
 
-    headers = {
-        "Authorization": f"Bearer {API_KEY}",
-        "Content-Type": "application/json"
-    }
+    # 🔴 Brute Force
+    if "failed login" in log or "multiple times" in log:
+        return {
+            "type": "Brute Force Attack",
+            "risk": "🔴 عالي",
+            "solution": "قم بحظر الـ IP + تفعيل MFA + تحديد عدد المحاولات"
+        }
 
-    data = {
-        "model": "deepseek-chat",
-        "messages": [
-            {
-                "role": "system",
-                "content": "You are a professional cybersecurity expert. Analyze threats and give clear advice."
-            },
-            {
-                "role": "user",
-                "content": text
-            }
-        ]
-    }
+    # 🟠 Port Scan
+    elif "port scan" in log or "nmap" in log:
+        return {
+            "type": "Port Scanning",
+            "risk": "🟠 متوسط",
+            "solution": "استخدم Firewall واغلق المنافذ غير المستخدمة"
+        }
 
-    response = requests.post(url, headers=headers, json=data)
-    return response.json()["choices"][0]["message"]["content"]
+    # 🔴 Malware
+    elif "malware" in log or "virus" in log:
+        return {
+            "type": "Malware Infection",
+            "risk": "🔴 عالي",
+            "solution": "اعزل الجهاز + استخدم Antivirus + فحص كامل"
+        }
+
+    # 🟡 Suspicious IP
+    elif "ip" in log:
+        return {
+            "type": "Suspicious Activity",
+            "risk": "🟡 متوسط",
+            "solution": "راقب الـ IP وقم بحظره إذا تكرر"
+        }
+
+    # 🟢 طبيعي
+    else:
+        return {
+            "type": "Normal Activity",
+            "risk": "🟢 منخفض",
+            "solution": "لا يوجد خطر واضح"
+        }
 
 if st.button("🔍 تحليل"):
-    result = analyze_with_ai(user_input)
-    st.write("🤖:", result)
+
+    result = analyze_security(user_input)
+
+    st.subheader("📊 النتيجة:")
+
+    st.write(f"🧠 نوع الهجوم: {result['type']}")
+    st.write(f"⚠️ مستوى الخطورة: {result['risk']}")
+    st.write(f"🛠️ الحل: {result['solution']}")
