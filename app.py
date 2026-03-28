@@ -1,27 +1,37 @@
 import streamlit as st
+import requests
 
-st.title("🛡️ Cyber AI Assistant (Free)")
+st.title("🛡️ Cyber Security AI Agent")
 
-user_input = st.text_input("اكتب سؤالك:")
+API_KEY = "sk-72885bff6559440286c83919058fbcc6"
 
-def simple_ai(question):
-    question = question.lower()
+user_input = st.text_area("📥 أدخل السؤال أو الـ Logs:")
 
-    if "اختراق" in question or "hack" in question:
-        return "⚠️ تحذير: نشاط مشبوه! تأكد من تغيير كلمات المرور وتفعيل الحماية."
+def analyze_with_ai(text):
+    url = "https://api.deepseek.com/v1/chat/completions"
 
-    elif "فيروس" in question or "virus" in question:
-        return "🦠 ربما يوجد فيروس. قم بفحص الجهاز باستخدام برنامج حماية."
+    headers = {
+        "Authorization": f"Bearer {API_KEY}",
+        "Content-Type": "application/json"
+    }
 
-    elif "ip" in question:
-        return "🌐 تحقق من عنوان IP، وإذا كان غريب قم بحظره."
+    data = {
+        "model": "deepseek-chat",
+        "messages": [
+            {
+                "role": "system",
+                "content": "You are a professional cybersecurity expert. Analyze threats and give clear advice."
+            },
+            {
+                "role": "user",
+                "content": text
+            }
+        ]
+    }
 
-    elif "مرحبا" in question or "hello" in question:
-        return "👋 مرحبا! أنا مساعد الأمن السيبراني."
+    response = requests.post(url, headers=headers, json=data)
+    return response.json()["choices"][0]["message"]["content"]
 
-    else:
-        return "🤖 حاول توضيح سؤالك أكثر."
-
-if user_input:
-    answer = simple_ai(user_input)
-    st.write("🤖:", answer)
+if st.button("🔍 تحليل"):
+    result = analyze_with_ai(user_input)
+    st.write("🤖:", result)
