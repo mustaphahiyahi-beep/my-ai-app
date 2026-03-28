@@ -1,24 +1,18 @@
 def ask_ai(question):
     return "AI غير مفعل حالياً"
     try:
-        url = "https://api.deepseek.com/v1/chat/completions"
+import streamlit as st
 
-        headers = {
-            "Authorization": "sk-72885bff6559440286c83919058fbcc6",
-            "Content-Type": "application/json"
-        }
+try:
+    import pandas as pd
+    import requests
 
-        data = {
-            "model": "deepseek-chat",
-            "messages": [
-                {"role": "system", "content": "You are a cybersecurity expert"},
-                {"role": "user", "content": question}
-            ]
-        }
+    st.set_page_config(layout="wide")
 
-        response = requests.post(url, headers=headers, json=data)
+    st.title("🛡️ Cybersecurity AI Agent Pro")
 
-        return response.json()  # 👈 مؤقتاً لعرض الخطأ
+    # باقي كودك هنا بالكامل 👇
+    # (لا تغيره فقط ضعه داخل try)
 
-    except Exception as e:
-        return str(e)
+except Exception as e:
+    st.error(f"❌ خطأ في التطبيق: {str(e)}")
