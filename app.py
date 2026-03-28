@@ -3,7 +3,7 @@ def ask_ai(question):
         url = "https://api.deepseek.com/v1/chat/completions"
 
         headers = {
-            "Authorization": "Bearer YOUR_API_KEY",
+            "Authorization": "sk-72885bff6559440286c83919058fbcc6",
             "Content-Type": "application/json"
         }
 
