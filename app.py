@@ -3,9 +3,9 @@ def ask_ai(question):
     try:
 import streamlit as st
 
-try:
-    import pandas as pd
-    import requests
+    try:
+        import pandas as pd
+        import requests
 
     st.set_page_config(layout="wide")
 
