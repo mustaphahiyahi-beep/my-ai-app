@@ -1,4 +1,5 @@
 def ask_ai(question):
+    return "AI غير مفعل حالياً"
     try:
         url = "https://api.deepseek.com/v1/chat/completions"
 
