@@ -1,15 +1,15 @@
 import streamlit as st
-import openai
+from openai import OpenAI
+import os
 
 st.title("🤖 AI Chat ذكي")
 
-# ضع مفتاحك هنا
-openai.api_key = "PUT-YOUR-API-KEY-HERE"
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 user_input = st.text_input("اكتب سؤالك:")
 
 if user_input:
-    response = openai.ChatCompletion.create(
+    response = client.chat.completions.create(
         model="gpt-4o-mini",
         messages=[
             {"role": "user", "content": user_input}
