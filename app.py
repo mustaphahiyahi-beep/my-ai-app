@@ -1,59 +1,56 @@
 import streamlit as st
+import pandas as pd
 
 st.title("🛡️ Cybersecurity AI Agent Pro")
+
+# تخزين البيانات
+if "history" not in st.session_state:
+    st.session_state.history = []
 
 user_input = st.text_area("📥 أدخل Logs أو سؤال:")
 
 def analyze_security(log):
-
     log = log.lower()
 
-    # 🔴 Brute Force
-    if "failed login" in log or "multiple times" in log:
-        return {
-            "type": "Brute Force Attack",
-            "risk": "🔴 عالي",
-            "solution": "قم بحظر الـ IP + تفعيل MFA + تحديد عدد المحاولات"
-        }
+    if "failed login" in log:
+        return "Brute Force", "🔴 عالي", "حظر IP + MFA"
 
-    # 🟠 Port Scan
-    elif "port scan" in log or "nmap" in log:
-        return {
-            "type": "Port Scanning",
-            "risk": "🟠 متوسط",
-            "solution": "استخدم Firewall واغلق المنافذ غير المستخدمة"
-        }
+    elif "nmap" in log or "port scan" in log:
+        return "Port Scan", "🟠 متوسط", "إغلاق المنافذ + Firewall"
 
-    # 🔴 Malware
-    elif "malware" in log or "virus" in log:
-        return {
-            "type": "Malware Infection",
-            "risk": "🔴 عالي",
-            "solution": "اعزل الجهاز + استخدم Antivirus + فحص كامل"
-        }
+    elif "sql" in log:
+        return "SQL Injection", "🔴 عالي", "استخدام Prepared Statements"
 
-    # 🟡 Suspicious IP
-    elif "ip" in log:
-        return {
-            "type": "Suspicious Activity",
-            "risk": "🟡 متوسط",
-            "solution": "راقب الـ IP وقم بحظره إذا تكرر"
-        }
+    elif "script" in log:
+        return "XSS Attack", "🟠 متوسط", "تصفية المدخلات"
 
-    # 🟢 طبيعي
     else:
-        return {
-            "type": "Normal Activity",
-            "risk": "🟢 منخفض",
-            "solution": "لا يوجد خطر واضح"
-        }
+        return "Normal", "🟢 منخفض", "لا يوجد خطر"
 
 if st.button("🔍 تحليل"):
 
-    result = analyze_security(user_input)
+    attack, risk, solution = analyze_security(user_input)
+
+    # حفظ النتيجة
+    st.session_state.history.append({
+        "log": user_input,
+        "attack": attack,
+        "risk": risk
+    })
 
     st.subheader("📊 النتيجة:")
+    st.write(f"🧠 الهجوم: {attack}")
+    st.write(f"⚠️ الخطورة: {risk}")
+    st.write(f"🛠️ الحل: {solution}")
 
-    st.write(f"🧠 نوع الهجوم: {result['type']}")
-    st.write(f"⚠️ مستوى الخطورة: {result['risk']}")
-    st.write(f"🛠️ الحل: {result['solution']}")
+# 📊 Dashboard
+st.subheader("📈 لوحة التحكم")
+
+if st.session_state.history:
+    df = pd.DataFrame(st.session_state.history)
+
+    st.write("عدد العمليات:", len(df))
+    st.write("أنواع الهجمات:")
+    st.write(df["attack"].value_counts())
+
+    st.dataframe(df)
