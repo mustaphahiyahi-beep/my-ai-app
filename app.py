@@ -1,56 +1,97 @@
 import streamlit as st
 import pandas as pd
+import requests
+
+st.set_page_config(layout="wide")
 
 st.title("🛡️ Cybersecurity AI Agent Pro")
 
-# تخزين البيانات
-if "history" not in st.session_state:
-    st.session_state.history = []
+# تقسيم الشاشة
+col1, col2 = st.columns(2)
 
-user_input = st.text_area("📥 أدخل Logs أو سؤال:")
+# =========================
+# 🛡️ القسم الأول (تحليل)
+# =========================
+with col1:
 
-def analyze_security(log):
-    log = log.lower()
+    st.header("📊 Log Analyzer")
 
-    if "failed login" in log:
-        return "Brute Force", "🔴 عالي", "حظر IP + MFA"
+    if "history" not in st.session_state:
+        st.session_state.history = []
 
-    elif "nmap" in log or "port scan" in log:
-        return "Port Scan", "🟠 متوسط", "إغلاق المنافذ + Firewall"
+    user_input = st.text_area("📥 أدخل Logs:")
 
-    elif "sql" in log:
-        return "SQL Injection", "🔴 عالي", "استخدام Prepared Statements"
+    def analyze_security(log):
+        log = log.lower()
 
-    elif "script" in log:
-        return "XSS Attack", "🟠 متوسط", "تصفية المدخلات"
+        if "failed login" in log:
+            return "Brute Force", "🔴 عالي", "حظر IP + MFA"
 
-    else:
-        return "Normal", "🟢 منخفض", "لا يوجد خطر"
+        elif "nmap" in log or "port scan" in log:
+            return "Port Scan", "🟠 متوسط", "إغلاق المنافذ + Firewall"
 
-if st.button("🔍 تحليل"):
+        elif "sql" in log:
+            return "SQL Injection", "🔴 عالي", "استخدام Prepared Statements"
 
-    attack, risk, solution = analyze_security(user_input)
+        elif "script" in log:
+            return "XSS Attack", "🟠 متوسط", "تصفية المدخلات"
 
-    # حفظ النتيجة
-    st.session_state.history.append({
-        "log": user_input,
-        "attack": attack,
-        "risk": risk
-    })
+        else:
+            return "Normal", "🟢 منخفض", "لا يوجد خطر"
 
-    st.subheader("📊 النتيجة:")
-    st.write(f"🧠 الهجوم: {attack}")
-    st.write(f"⚠️ الخطورة: {risk}")
-    st.write(f"🛠️ الحل: {solution}")
+    if st.button("🔍 تحليل"):
+        attack, risk, solution = analyze_security(user_input)
 
-# 📊 Dashboard
-st.subheader("📈 لوحة التحكم")
+        st.session_state.history.append({
+            "log": user_input,
+            "attack": attack,
+            "risk": risk
+        })
 
-if st.session_state.history:
-    df = pd.DataFrame(st.session_state.history)
+        st.success(f"🧠 {attack}")
+        st.warning(f"⚠️ {risk}")
+        st.info(f"🛠️ {solution}")
 
-    st.write("عدد العمليات:", len(df))
-    st.write("أنواع الهجمات:")
-    st.write(df["attack"].value_counts())
+    # Dashboard
+    if st.session_state.history:
+        df = pd.DataFrame(st.session_state.history)
+        st.subheader("📈 Dashboard")
+        st.write(df["attack"].value_counts())
+        st.dataframe(df)
 
-    st.dataframe(df)
+
+# =========================
+# 🤖 القسم الثاني (AI)
+# =========================
+with col2:
+
+    st.header("🤖 AI Cyber Assistant")
+
+    ai_input = st.text_input("💬 اسأل عن الأمن السيبراني:")
+
+    def ask_ai(question):
+        url = "https://api.deepseek.com/v1/chat/completions"
+
+        headers = {
+            "Authorization": "Bearer YOUR_API_KEY",
+            "Content-Type": "application/json"
+        }
+
+        data = {
+            "model": "deepseek-chat",
+            "messages": [
+                {"role": "system", "content": "You are a cybersecurity expert"},
+                {"role": "user", "content": question}
+            ]
+        }
+
+        response = requests.post(url, headers=headers, json=data)
+
+        if response.status_code == 200:
+            return response.json()["choices"][0]["message"]["content"]
+        else:
+            return "❌ خطأ في الاتصال بالذكاء الاصطناعي"
+
+    if st.button("🤖 اسأل"):
+        answer = ask_ai(ai_input)
+        st.write(answer)
