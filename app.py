@@ -2,6 +2,10 @@ import streamlit as st
 from groq import Groq
 import requests
 
+# 📄 PDF
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
+from reportlab.lib.styles import getSampleStyleSheet
+
 # 🔑 API KEY
 client = Groq(api_key=st.secrets["GROQ_API_KEY"])
 
@@ -10,6 +14,18 @@ st.set_page_config(page_title="Cybersecurity AI", page_icon="🛡️")
 st.title("🛡️ Cybersecurity AI Platform")
 
 st.write("📂 Upload logs, analyze threats, and check IP intelligence")
+
+# 📄 دالة إنشاء PDF
+def create_pdf(text):
+    doc = SimpleDocTemplate("report.pdf")
+    styles = getSampleStyleSheet()
+
+    content = []
+    content.append(Paragraph("Cybersecurity Incident Report", styles['Title']))
+    content.append(Spacer(1, 12))
+    content.append(Paragraph(text, styles['BodyText']))
+
+    doc.build(content)
 
 # 📂 رفع ملف
 uploaded_file = st.file_uploader("📁 Upload Log File", type=["txt", "log"])
@@ -74,6 +90,18 @@ Be professional and precise."""
             st.subheader("🧠 AI Analysis")
             st.success(result)
 
+            # 📥 تحميل PDF
+            if st.button("📥 Download Report as PDF"):
+                create_pdf(result)
+
+                with open("report.pdf", "rb") as f:
+                    st.download_button(
+                        label="⬇️ Click to Download",
+                        data=f,
+                        file_name="security_report.pdf",
+                        mime="application/pdf"
+                    )
+
             # 📊 Dashboard
             st.subheader("📊 Security Dashboard")
 
@@ -109,6 +137,8 @@ Be professional and precise."""
         else:
             st.error("❌ Failed to fetch IP info")
 
-    # ⚠️ تنبيه إذا لا يوجد إدخال
+    # ⚠️ تنبيه
     if not user_input and not ip_input:
         st.warning("⚠️ Please enter logs or IP to analyze")
+
+            
