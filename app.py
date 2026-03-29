@@ -1,10 +1,9 @@
 import streamlit as st
 import requests
 
-st.set_page_config(page_title="AI Cyber Assistant")
-
 st.title("🤖 AI Cyber Assistant")
 
+# ✅ جلب التوكن من Secrets
 HF_TOKEN = st.secrets["HF_TOKEN"]
 
 user_input = st.text_input("💬 اسأل:")
@@ -15,7 +14,7 @@ if st.button("اسأل"):
         API_URL = "https://router.huggingface.co/hf-inference/models/mistralai/Mistral-7B-Instruct-v0.2"
 
         headers = {
-            "Authorization": f"Bearer {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}",
+            "Authorization": f"Bearer {HF_TOKEN}",
             "Content-Type": "application/json"
         }
 
