@@ -1,22 +1,25 @@
 import streamlit as st
-from google import genai
+from groq import Groq
 
-st.title("🤖 AI Assistant")
+# API Key
+client = Groq(api_key=st.secrets["GROQ_API_KEY"])
 
-# API KEY
-client = genai.Client(api_key=st.secrets["GEMINI_API_KEY"])
+st.title("🤖 AI Cyber Assistant")
 
 user_input = st.text_input("💬 اسأل:")
 
-if st.button("اسأل"):
+if st.button("إرسال"):
     if user_input:
         try:
-            response = client.models.generate_content(
-                model="gemini-2.0-flash",
-                contents=user_input
+            response = client.chat.completions.create(
+                model="llama3-8b-8192",
+                messages=[
+                    {"role": "user", "content": user_input}
+                ]
             )
-            st.success(response.text)
+
+            answer = response.choices[0].message.content
+            st.success(answer)
+
         except Exception as e:
-            st.error(f"خطأ: {e}")
-    else:
-        st.warning("اكتب سؤال")
+            st.error(f"❌ خطأ: {e}")
