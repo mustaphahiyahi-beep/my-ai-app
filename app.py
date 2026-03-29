@@ -5,11 +5,11 @@ import requests
 # 🔑 API KEY
 client = Groq(api_key=st.secrets["GROQ_API_KEY"])
 
-# 🎨 واجهة
+# 🎨 واجهة التطبيق
 st.set_page_config(page_title="Cybersecurity AI", page_icon="🛡️")
 st.title("🛡️ Cybersecurity AI Platform")
 
-st.write("📂 ارفع ملف أو أدخل نص أو حلل IP")
+st.write("📂 Upload logs, analyze threats, and check IP intelligence")
 
 # 📂 رفع ملف
 uploaded_file = st.file_uploader("📁 Upload Log File", type=["txt", "log"])
@@ -30,7 +30,7 @@ if len(user_input) > MAX_CHARS:
 
 # 🌐 تحليل IP
 st.subheader("🌐 IP Intelligence")
-ip_input = st.text_input("Enter IP address to analyze")
+ip_input = st.text_input("Enter IP address")
 
 def get_ip_info(ip):
     try:
@@ -41,6 +41,8 @@ def get_ip_info(ip):
 
 # 🚀 زر التحليل
 if st.button("🔍 Analyze"):
+
+    # 🧠 تحليل AI
     if user_input:
         try:
             response = client.chat.completions.create(
@@ -53,11 +55,11 @@ if st.button("🔍 Analyze"):
 Analyze logs and detect:
 - Threat classification (multiple if needed)
 - Risk level (Low, Medium, High, Critical)
-- Detect internal threats and lateral movement
-- Provide technical explanation
-- Provide mitigation steps
+- Internal threats and lateral movement
+- Technical explanation
+- Mitigation steps
 
-Be precise and professional."""
+Be professional and precise."""
                     },
                     {
                         "role": "user",
@@ -66,25 +68,30 @@ Be precise and professional."""
                 ]
             )
 
+            result = response.choices[0].message.content
+
+            # ✅ عرض النتيجة
             st.subheader("🧠 AI Analysis")
-            # 📊 Dashboard بسيط
-st.subheader("📊 Security Dashboard")
+            st.success(result)
 
-analysis_text = response.choices[0].message.content.lower()
+            # 📊 Dashboard
+            st.subheader("📊 Security Dashboard")
 
-threats = 0
-if "brute" in analysis_text:
-    threats += 1
-if "sql" in analysis_text:
-    threats += 1
-if "critical" in analysis_text:
-    threats += 1
+            analysis_text = result.lower()
 
-col1, col2, col3 = st.columns(3)
+            threats = 0
+            if "brute" in analysis_text:
+                threats += 1
+            if "sql" in analysis_text:
+                threats += 1
+            if "critical" in analysis_text:
+                threats += 1
 
-col1.metric("🚨 Threats Detected", threats)
-col2.metric("⚠️ Risk Level", "Critical" if "critical" in analysis_text else "Medium")
-col3.metric("🧠 Status", "Done")
+            col1, col2, col3 = st.columns(3)
+
+            col1.metric("🚨 Threats Detected", threats)
+            col2.metric("⚠️ Risk Level", "Critical" if "critical" in analysis_text else "Medium")
+            col3.metric("✅ Status", "Completed")
 
         except Exception as e:
             st.error(f"❌ Error: {e}")
@@ -92,14 +99,16 @@ col3.metric("🧠 Status", "Done")
     # 🌐 تحليل IP
     if ip_input:
         ip_data = get_ip_info(ip_input)
+
         if ip_data and ip_data["status"] == "success":
             st.subheader("🌍 IP Information")
             st.write(f"Country: {ip_data['country']}")
             st.write(f"City: {ip_data['city']}")
             st.write(f"ISP: {ip_data['isp']}")
-            st.write(f"Org: {ip_data['org']}")
+            st.write(f"Organization: {ip_data['org']}")
         else:
             st.error("❌ Failed to fetch IP info")
 
+    # ⚠️ تنبيه إذا لا يوجد إدخال
     if not user_input and not ip_input:
-        st.warning("⚠️ Enter data or IP to analyze")
+        st.warning("⚠️ Please enter logs or IP to analyze")
