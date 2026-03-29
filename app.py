@@ -13,7 +13,15 @@ if st.button("إرسال"):
             response = client.chat.completions.create(
                 model="llama-3.1-8b-instant",
                 messages=[
-                    {"role": "user", "content": user_input}
+    {
+        "role": "system",
+        "content": "You are a professional cybersecurity expert. You analyze threats, malware, vulnerabilities, and give precise technical answers."
+    },
+    {
+        "role": "user",
+        "content": user_input
+    }
+]
                 ]
             )
 
