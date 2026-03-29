@@ -1,27 +1,28 @@
 import streamlit as st
 from groq import Groq
 
+# API
 client = Groq(api_key=st.secrets["GROQ_API_KEY"])
 
-st.title("🤖 AI Assistant")
+# واجهة
+st.title("🛡️ Cybersecurity AI Assistant")
 
-user_input = st.text_input("💬 اسأل:")
+user_input = st.text_area("💬 أدخل سؤالك أو Log:")
 
-if st.button("إرسال"):
+if st.button("تحليل"):
     if user_input:
         try:
             response = client.chat.completions.create(
                 model="llama-3.1-8b-instant",
                 messages=[
-    {
-        "role": "system",
-        "content": "You are a professional cybersecurity expert. You analyze threats, malware, vulnerabilities, and give precise technical answers."
-    },
-    {
-        "role": "user",
-        "content": user_input
-    }
-]
+                    {
+                        "role": "system",
+                        "content": "You are a professional cybersecurity expert. Analyze threats, logs, attacks, and give clear technical answers."
+                    },
+                    {
+                        "role": "user",
+                        "content": user_input
+                    }
                 ]
             )
 
