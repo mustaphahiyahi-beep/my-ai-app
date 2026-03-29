@@ -1,9 +1,13 @@
 import streamlit as st
+import requests
 
 st.set_page_config(layout="wide")
 
 st.title("🛡️ Cybersecurity AI Agent Pro")
 
+# =============================
+# 📊 Log Analyzer
+# =============================
 st.header("📊 Log Analyzer")
 
 logs = st.text_area("📥 أدخل Logs:")
@@ -15,6 +19,9 @@ if st.button("تحليل"):
     else:
         st.warning("يرجى إدخال Logs")
 
+# =============================
+# 🤖 AI Cyber Assistant
+# =============================
 st.header("🤖 AI Cyber Assistant")
 
 question = st.text_input("💬 اسأل عن الأمن السيبراني:")
@@ -24,27 +31,26 @@ if st.button("اسأل"):
         with st.spinner("جاري التفكير..."):
             try:
                 response = requests.post(
-                    "https://api.openai.com/v1/chat/completions",
+                    "https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.2",
                     headers={
-                        "Authorization": "Bearer " + st.secrets["OPENAI_API_KEY"],
-                        "Content-Type": "application/json"
+                        "Authorization": f"Bearer {st.secrets['HF_API_KEY']}"
                     },
                     json={
-                        "model": "gpt-4o-mini",
-                        "messages": [
-                            {"role": "system", "content": "أنت خبير أمن سيبراني"},
-                            {"role": "user", "content": question}
-                        ]
+                        "inputs": question
                     }
                 )
 
                 result = response.json()
-                answer = result["choices"][0]["message"]["content"]
 
-                st.success("الإجابة:")
+                if isinstance(result, list):
+                    answer = result[0]["generated_text"]
+                else:
+                    answer = str(result)
+
+                st.success("✅ الإجابة:")
                 st.write(answer)
 
             except Exception as e:
-                st.error(f"خطأ: {e}")
+                st.error(f"❌ خطأ: {e}")
     else:
         st.warning("اكتب سؤال أولاً")
