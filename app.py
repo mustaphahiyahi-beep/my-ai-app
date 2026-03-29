@@ -67,7 +67,24 @@ Be precise and professional."""
             )
 
             st.subheader("🧠 AI Analysis")
-            st.success(response.choices[0].message.content)
+            # 📊 Dashboard بسيط
+st.subheader("📊 Security Dashboard")
+
+analysis_text = response.choices[0].message.content.lower()
+
+threats = 0
+if "brute" in analysis_text:
+    threats += 1
+if "sql" in analysis_text:
+    threats += 1
+if "critical" in analysis_text:
+    threats += 1
+
+col1, col2, col3 = st.columns(3)
+
+col1.metric("🚨 Threats Detected", threats)
+col2.metric("⚠️ Risk Level", "Critical" if "critical" in analysis_text else "Medium")
+col3.metric("🧠 Status", "Done")
 
         except Exception as e:
             st.error(f"❌ Error: {e}")
