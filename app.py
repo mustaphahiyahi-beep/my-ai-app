@@ -4,7 +4,7 @@ import requests
 st.title("🤖 AI Cyber Assistant")
 
 # ✅ جلب التوكن من Secrets
-HF_TOKEN = st.secrets["HF_TOKEN"]
+HF_TOKEN = st.secrets["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"]
 
 user_input = st.text_input("💬 اسأل:")
 
@@ -14,7 +14,7 @@ if st.button("اسأل"):
         API_URL = "https://router.huggingface.co/hf-inference/models/mistralai/Mistral-7B-Instruct-v0.2"
 
         headers = {
-            "Authorization": f"Bearer {HF_TOKEN}",
+            "Authorization": f"Bearer {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}",
             "Content-Type": "application/json"
         }
 
