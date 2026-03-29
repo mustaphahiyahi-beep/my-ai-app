@@ -1,11 +1,13 @@
 import streamlit as st
 import google.generativeai as genai
 
-st.title("🤖 AI Assistant")
+st.title("🤖 AI Assistant (Gemini)")
 
+# API KEY
 genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
 
-model = genai.GenerativeModel("gemini-pro")
+# ✅ الموديل الصحيح
+model = genai.GenerativeModel("gemini-1.5-flash-latest")
 
 user_input = st.text_input("💬 اسأل:")
 
@@ -26,4 +28,4 @@ if st.button("اسأل"):
             except Exception as e:
                 st.error(f"خطأ: {e}")
     else:
-        st.warning("اكتب سؤال")
+        st.warning("اكتب سؤال أولاً")
