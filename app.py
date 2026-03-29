@@ -1,28 +1,46 @@
 import streamlit as st
 from groq import Groq
+import requests
 
-# 🔑 API
+# 🔑 API KEY
 client = Groq(api_key=st.secrets["GROQ_API_KEY"])
 
 # 🎨 واجهة
 st.set_page_config(page_title="Cybersecurity AI", page_icon="🛡️")
-st.title("🛡️ Cybersecurity AI Analyst")
+st.title("🛡️ Cybersecurity AI Platform")
 
-st.write("📂 ارفع ملف Log أو أدخل نص للتحليل")
+st.write("📂 ارفع ملف أو أدخل نص أو حلل IP")
 
 # 📂 رفع ملف
-uploaded_file = st.file_uploader("📁 اختر ملف Log", type=["txt", "log"])
+uploaded_file = st.file_uploader("📁 Upload Log File", type=["txt", "log"])
 
-# 📝 إدخال يدوي (إذا لم يتم رفع ملف)
+# 📝 إدخال نص
 user_input = ""
 if uploaded_file is not None:
     user_input = uploaded_file.read().decode("utf-8")
-    st.success("✅ تم تحميل الملف بنجاح")
+    st.success("✅ File uploaded successfully")
 else:
-    user_input = st.text_area("💬 أو اكتب البيانات هنا:")
+    user_input = st.text_area("💬 Enter logs or text:")
+
+# ✂️ تقليل الحجم (حل مشكلة 413)
+MAX_CHARS = 4000
+if len(user_input) > MAX_CHARS:
+    user_input = user_input[:MAX_CHARS]
+    st.warning("⚠️ File too large, trimmed automatically")
+
+# 🌐 تحليل IP
+st.subheader("🌐 IP Intelligence")
+ip_input = st.text_input("Enter IP address to analyze")
+
+def get_ip_info(ip):
+    try:
+        response = requests.get(f"http://ip-api.com/json/{ip}")
+        return response.json()
+    except:
+        return None
 
 # 🚀 زر التحليل
-if st.button("🔍 تحليل"):
+if st.button("🔍 Analyze"):
     if user_input:
         try:
             response = client.chat.completions.create(
@@ -30,14 +48,14 @@ if st.button("🔍 تحليل"):
                 messages=[
                     {
                         "role": "system",
-                        "content": """You are a senior cybersecurity analyst working in a SOC (Security Operations Center).
-You analyze logs and detect cyber threats.
+                        "content": """You are a senior cybersecurity analyst working in a SOC.
 
-Always provide:
-- Threat classification
+Analyze logs and detect:
+- Threat classification (multiple if needed)
 - Risk level (Low, Medium, High, Critical)
-- Technical explanation
-- Clear mitigation steps
+- Detect internal threats and lateral movement
+- Provide technical explanation
+- Provide mitigation steps
 
 Be precise and professional."""
                     },
@@ -48,10 +66,23 @@ Be precise and professional."""
                 ]
             )
 
-            answer = response.choices[0].message.content
-            st.success(answer)
+            st.subheader("🧠 AI Analysis")
+            st.success(response.choices[0].message.content)
 
         except Exception as e:
-            st.error(f"❌ خطأ: {e}")
-    else:
-        st.warning("⚠️ الرجاء إدخال نص أو رفع ملف")
+            st.error(f"❌ Error: {e}")
+
+    # 🌐 تحليل IP
+    if ip_input:
+        ip_data = get_ip_info(ip_input)
+        if ip_data and ip_data["status"] == "success":
+            st.subheader("🌍 IP Information")
+            st.write(f"Country: {ip_data['country']}")
+            st.write(f"City: {ip_data['city']}")
+            st.write(f"ISP: {ip_data['isp']}")
+            st.write(f"Org: {ip_data['org']}")
+        else:
+            st.error("❌ Failed to fetch IP info")
+
+    if not user_input and not ip_input:
+        st.warning("⚠️ Enter data or IP to analyze")
