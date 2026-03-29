@@ -9,13 +9,13 @@ from reportlab.lib.styles import getSampleStyleSheet
 # 🔑 API KEY
 client = Groq(api_key=st.secrets["GROQ_API_KEY"])
 
-# 🎨 واجهة التطبيق
+# 🎨 واجهة
 st.set_page_config(page_title="Cybersecurity AI", page_icon="🛡️")
 st.title("🛡️ Cybersecurity AI Platform")
 
 st.write("📂 Upload logs, analyze threats, and check IP intelligence")
 
-# 📄 دالة إنشاء PDF
+# 📄 دالة PDF
 def create_pdf(text):
     doc = SimpleDocTemplate("report.pdf")
     styles = getSampleStyleSheet()
@@ -38,13 +38,13 @@ if uploaded_file is not None:
 else:
     user_input = st.text_area("💬 Enter logs or text:")
 
-# ✂️ تقليل الحجم (حل مشكلة 413)
+# ✂️ تقليل الحجم
 MAX_CHARS = 4000
 if len(user_input) > MAX_CHARS:
     user_input = user_input[:MAX_CHARS]
     st.warning("⚠️ File too large, trimmed automatically")
 
-# 🌐 تحليل IP
+# 🌐 IP
 st.subheader("🌐 IP Intelligence")
 ip_input = st.text_input("Enter IP address")
 
@@ -69,13 +69,10 @@ if st.button("🔍 Analyze"):
                         "content": """You are a senior cybersecurity analyst working in a SOC.
 
 Analyze logs and detect:
-- Threat classification (multiple if needed)
-- Risk level (Low, Medium, High, Critical)
-- Internal threats and lateral movement
+- Threat classification
+- Risk level
 - Technical explanation
-- Mitigation steps
-
-Be professional and precise."""
+- Mitigation steps"""
                     },
                     {
                         "role": "user",
@@ -90,18 +87,16 @@ Be professional and precise."""
             st.subheader("🧠 AI Analysis")
             st.success(result)
 
-            # 📥 تحميل PDF
-            # 📥 إنشاء PDF
-create_pdf(result)
+            # ✅ إنشاء PDF + زر تحميل (بدون أخطاء)
+            create_pdf(result)
 
-with open("report.pdf", "rb") as f:
-    st.download_button(
-        label="📥 Download Report as PDF",
-        data=f,
-        file_name="security_report.pdf",
-        mime="application/pdf"
-    )
-                    
+            with open("report.pdf", "rb") as f:
+                st.download_button(
+                    label="📥 Download Report as PDF",
+                    data=f,
+                    file_name="security_report.pdf",
+                    mime="application/pdf"
+                )
 
             # 📊 Dashboard
             st.subheader("📊 Security Dashboard")
@@ -141,5 +136,3 @@ with open("report.pdf", "rb") as f:
     # ⚠️ تنبيه
     if not user_input and not ip_input:
         st.warning("⚠️ Please enter logs or IP to analyze")
-
-            
