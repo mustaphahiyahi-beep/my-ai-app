@@ -1,12 +1,11 @@
 import streamlit as st
 import google.generativeai as genai
 
-st.title("🤖 AI Cyber Assistant (Fast)")
+st.title("🤖 AI Assistant")
 
 genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
 
-# 🔥 نموذج سريع
-model = genai.GenerativeModel("gemini-1.5-flash")
+model = genai.GenerativeModel("gemini-pro")
 
 user_input = st.text_input("💬 اسأل:")
 
@@ -16,15 +15,15 @@ if st.button("اسأل"):
             try:
                 response = model.generate_content(
                     user_input,
-                    request_options={"timeout": 10}  # ⏱️ يمنع التعليق
+                    request_options={"timeout": 10}
                 )
 
                 if response.text:
                     st.success(response.text)
                 else:
-                    st.warning("لم يتم توليد رد 😅")
+                    st.warning("لا يوجد رد 😅")
 
             except Exception as e:
                 st.error(f"خطأ: {e}")
     else:
-        st.warning("اكتب سؤال أولاً")
+        st.warning("اكتب سؤال")
