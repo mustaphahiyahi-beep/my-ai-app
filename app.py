@@ -1,13 +1,10 @@
 import streamlit as st
-import google.generativeai as genai
+from google import genai
 
-st.title("🤖 AI Assistant (Gemini)")
+st.title("🤖 AI Assistant (Gemini New API)")
 
 # API KEY
-genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
-
-# ✅ الموديل الصحيح
-model = genai.GenerativeModel("gemini-1.5-flash-latest")
+client = genai.Client(api_key=st.secrets["GEMINI_API_KEY"])
 
 user_input = st.text_input("💬 اسأل:")
 
@@ -15,15 +12,12 @@ if st.button("اسأل"):
     if user_input:
         with st.spinner("⏳ جاري التفكير..."):
             try:
-                response = model.generate_content(
-                    user_input,
-                    request_options={"timeout": 10}
+                response = client.models.generate_content(
+                    model="gemini-2.0-flash",
+                    contents=user_input
                 )
 
-                if response.text:
-                    st.success(response.text)
-                else:
-                    st.warning("لا يوجد رد 😅")
+                st.success(response.text)
 
             except Exception as e:
                 st.error(f"خطأ: {e}")
