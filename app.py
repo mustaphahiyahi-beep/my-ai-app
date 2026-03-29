@@ -31,7 +31,7 @@ if st.button("اسأل"):
         with st.spinner("جاري التفكير..."):
             try:
                 response = requests.post(
-                    "https://router.huggingface.co/hf-inference/models/mistralai/Mistral-7B-Instruct-v0.2"
+                    "https://router.huggingface.co/hf-inference/models/mistralai/Mistral-7B-Instruct-v0.2",
                     headers={
                         "Authorization": f"Bearer {st.secrets['HF_API_KEY']}"
                     },
