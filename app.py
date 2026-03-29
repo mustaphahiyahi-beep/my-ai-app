@@ -91,16 +91,17 @@ Be professional and precise."""
             st.success(result)
 
             # 📥 تحميل PDF
-            if st.button("📥 Download Report as PDF"):
-                create_pdf(result)
+            # 📥 إنشاء PDF
+create_pdf(result)
 
-                with open("report.pdf", "rb") as f:
-                    st.download_button(
-                        label="⬇️ Click to Download",
-                        data=f,
-                        file_name="security_report.pdf",
-                        mime="application/pdf"
-                    )
+with open("report.pdf", "rb") as f:
+    st.download_button(
+        label="📥 Download Report as PDF",
+        data=f,
+        file_name="security_report.pdf",
+        mime="application/pdf"
+    )
+                    
 
             # 📊 Dashboard
             st.subheader("📊 Security Dashboard")
