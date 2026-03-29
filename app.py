@@ -1,56 +1,40 @@
 import streamlit as st
 import requests
 
-st.set_page_config(layout="wide")
+st.set_page_config(page_title="AI Cyber Assistant")
 
-st.title("🛡️ Cybersecurity AI Agent Pro")
+st.title("🤖 AI Cyber Assistant")
 
-# =============================
-# 📊 Log Analyzer
-# =============================
-st.header("📊 Log Analyzer")
+HF_TOKEN = st.secrets["HF_TOKEN"]
 
-logs = st.text_area("📥 أدخل Logs:")
-
-if st.button("تحليل"):
-    if logs:
-        st.success("تم استلام البيانات ✅")
-        st.write(logs)
-    else:
-        st.warning("يرجى إدخال Logs")
-
-# =============================
-# 🤖 AI Cyber Assistant
-# =============================
-st.header("🤖 AI Cyber Assistant")
-
-question = st.text_input("💬 اسأل عن الأمن السيبراني:")
+user_input = st.text_input("💬 اسأل:")
 
 if st.button("اسأل"):
-    if question:
-        with st.spinner("جاري التفكير..."):
-            try:
-                response = requests.post(
-                    "https://router.huggingface.co/hf-inference/models/mistralai/Mistral-7B-Instruct-v0.2",
-                    headers={
-                        "Authorization": f"Bearer {st.secrets['HF_API_KEY']}"
-                    },
-                    json={
-                        "inputs": question
-                    }
-                )
 
+    if user_input:
+        API_URL = "https://router.huggingface.co/hf-inference/models/mistralai/Mistral-7B-Instruct-v0.2"
+
+        headers = {
+            "Authorization": f"Bearer {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}",
+            "Content-Type": "application/json"
+        }
+
+        payload = {
+            "inputs": user_input
+        }
+
+        try:
+            response = requests.post(API_URL, headers=headers, json=payload)
+
+            if response.status_code != 200:
+                st.error(response.text)
+            else:
                 result = response.json()
 
                 if isinstance(result, list):
-                    answer = result[0]["generated_text"]
+                    st.success(result[0]["generated_text"])
                 else:
-                    answer = str(result)
+                    st.success(result)
 
-                st.success("✅ الإجابة:")
-                st.write(answer)
-
-            except Exception as e:
-                st.error(f"❌ خطأ: {e}")
-    else:
-        st.warning("اكتب سؤال أولاً")
+        except Exception as e:
+            st.error(e)
