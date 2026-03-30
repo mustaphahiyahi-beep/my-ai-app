@@ -2,20 +2,18 @@ import streamlit as st
 from groq import Groq
 import requests
 
-# 📄 PDF
+# PDF
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
 from reportlab.lib.styles import getSampleStyleSheet
 
-# 🔑 API KEY
+# API
 client = Groq(api_key=st.secrets["GROQ_API_KEY"])
 
-# 🎨 واجهة
+# UI
 st.set_page_config(page_title="Cybersecurity AI", page_icon="🛡️")
 st.title("🛡️ Cybersecurity AI Platform")
 
-st.write("📂 Upload logs, analyze threats, and check IP intelligence")
-
-# 📄 دالة PDF
+# PDF Function
 def create_pdf(text):
     doc = SimpleDocTemplate("report.pdf")
     styles = getSampleStyleSheet()
@@ -27,112 +25,103 @@ def create_pdf(text):
 
     doc.build(content)
 
-# 📂 رفع ملف
+# Upload file
 uploaded_file = st.file_uploader("📁 Upload Log File", type=["txt", "log"])
 
-# 📝 إدخال نص
+# Text input
 user_input = ""
-if uploaded_file is not None:
+if uploaded_file:
     user_input = uploaded_file.read().decode("utf-8")
-    st.success("✅ File uploaded successfully")
+    st.success("✅ File uploaded")
 else:
-    user_input = st.text_area("💬 Enter logs or text:")
+    user_input = st.text_area("💬 Enter logs")
 
-# ✂️ تقليل الحجم
-MAX_CHARS = 4000
-if len(user_input) > MAX_CHARS:
-    user_input = user_input[:MAX_CHARS]
-    st.warning("⚠️ File too large, trimmed automatically")
+# Limit size
+if len(user_input) > 4000:
+    user_input = user_input[:4000]
+    st.warning("⚠️ Text trimmed")
 
-# 🌐 IP
+# IP Section
 st.subheader("🌐 IP Intelligence")
-ip_input = st.text_input("Enter IP address")
+ip_input = st.text_input("Enter IP")
 
 def get_ip_info(ip):
     try:
-        response = requests.get(f"http://ip-api.com/json/{ip}")
-        return response.json()
+        return requests.get(f"http://ip-api.com/json/{ip}").json()
     except:
         return None
 
-# 🚀 زر التحليل
+# 🔗 VirusTotal URL
+st.subheader("🔗 URL Scanner (VirusTotal)")
+url_input = st.text_input("Enter URL")
+
+def scan_url(url):
+    api_key = st.secrets["VIRUSTOTAL_API_KEY"]
+
+    headers = {"x-apikey": api_key}
+    data = {"url": url}
+
+    response = requests.post(
+        "https://www.virustotal.com/api/v3/urls",
+        headers=headers,
+        data=data
+    )
+
+    return response.json()
+
+# BUTTON
 if st.button("🔍 Analyze"):
 
-    # 🧠 تحليل AI
+    # AI Analysis
     if user_input:
         try:
             response = client.chat.completions.create(
                 model="llama-3.1-8b-instant",
                 messages=[
-                    {
-                        "role": "system",
-                        "content": """You are a senior cybersecurity analyst working in a SOC.
-
-Analyze logs and detect:
-- Threat classification
-- Risk level
-- Technical explanation
-- Mitigation steps"""
-                    },
-                    {
-                        "role": "user",
-                        "content": user_input
-                    }
+                    {"role": "system", "content": "You are a cybersecurity expert."},
+                    {"role": "user", "content": user_input}
                 ]
             )
 
             result = response.choices[0].message.content
 
-            # ✅ عرض النتيجة
             st.subheader("🧠 AI Analysis")
             st.success(result)
 
-            # ✅ إنشاء PDF + زر تحميل (بدون أخطاء)
+            # PDF
             create_pdf(result)
-
             with open("report.pdf", "rb") as f:
-                st.download_button(
-                    label="📥 Download Report as PDF",
-                    data=f,
-                    file_name="security_report.pdf",
-                    mime="application/pdf"
-                )
+                st.download_button("📥 Download PDF", f, "report.pdf")
 
-            # 📊 Dashboard
-            st.subheader("📊 Security Dashboard")
-
-            analysis_text = result.lower()
-
-            threats = 0
-            if "brute" in analysis_text:
-                threats += 1
-            if "sql" in analysis_text:
-                threats += 1
-            if "critical" in analysis_text:
-                threats += 1
-
-            col1, col2, col3 = st.columns(3)
-
-            col1.metric("🚨 Threats Detected", threats)
-            col2.metric("⚠️ Risk Level", "Critical" if "critical" in analysis_text else "Medium")
-            col3.metric("✅ Status", "Completed")
+            # Dashboard
+            st.subheader("📊 Dashboard")
+            st.write("Analysis complete ✅")
 
         except Exception as e:
-            st.error(f"❌ Error: {e}")
+            st.error(f"❌ AI Error: {e}")
 
-    # 🌐 تحليل IP
+    # IP Analysis
     if ip_input:
         ip_data = get_ip_info(ip_input)
-
         if ip_data and ip_data["status"] == "success":
-            st.subheader("🌍 IP Information")
-            st.write(f"Country: {ip_data['country']}")
-            st.write(f"City: {ip_data['city']}")
-            st.write(f"ISP: {ip_data['isp']}")
-            st.write(f"Organization: {ip_data['org']}")
+            st.subheader("🌍 IP Info")
+            st.write(ip_data)
         else:
-            st.error("❌ Failed to fetch IP info")
+            st.error("❌ IP Error")
 
-    # ⚠️ تنبيه
-    if not user_input and not ip_input:
-        st.warning("⚠️ Please enter logs or IP to analyze")
+    # URL Analysis
+    if url_input:
+        try:
+            vt = scan_url(url_input)
+
+            st.subheader("🦠 VirusTotal Result")
+
+            # عرض بسيط
+            st.write(vt)
+
+        except Exception as e:
+            st.error(f"❌ URL Error: {e}")
+
+    if not user_input and not ip_input and not url_input:
+        st.warning("⚠️ Enter something to analyze") 
+        
