@@ -113,7 +113,13 @@ if st.button("🔍 Analyze"):
         st.write(threats)
 
         # Risk من AI
-        risk += 20 + (10 * len(threats))
+        # Risk ذكي
+if len(threats) == 0:
+    risk += 5
+elif len(threats) == 1:
+    risk += 15
+else:
+    risk += 25
 
         create_pdf(ai)
         with open("report.pdf", "rb") as f:
@@ -129,10 +135,12 @@ if st.button("🔍 Analyze"):
             st.write(f"Country: {data['country']}")
             st.write(f"ISP: {data['isp']}")
 
-            if "Google" in data["isp"]:
-                risk += 10
-            else:
-                risk += 25
+            if ip.startswith("192.168"):
+    risk += 5  # داخلي
+elif "Google" in data["isp"]:
+    risk += 10
+else:
+    risk += 30
 
     # URL
     if url:
@@ -171,4 +179,5 @@ st.subheader("📊 Dashboard")
 
 if st.session_state.history:
     df = pd.DataFrame(st.session_state.history)
-    st.line_chart(df["Risk"])
+df.index = range(1, len(df)+1)
+st.line_chart(df)
