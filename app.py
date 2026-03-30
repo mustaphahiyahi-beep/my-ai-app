@@ -8,8 +8,10 @@ import pandas as pd
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
 from reportlab.lib.styles import getSampleStyleSheet
 
-# إعداد
+# ================= إعداد الصفحة =================
 st.set_page_config(page_title="Cybersecurity AI Pro", page_icon="🛡️")
+
+# API
 client = Groq(api_key=st.secrets["GROQ_API_KEY"])
 
 # ذاكرة
@@ -22,11 +24,13 @@ st.title("🛡️ Cybersecurity AI Pro")
 def create_pdf(text):
     doc = SimpleDocTemplate("report.pdf")
     styles = getSampleStyleSheet()
+
     content = [
         Paragraph("Cybersecurity Report", styles['Title']),
         Spacer(1, 12),
         Paragraph(text, styles['BodyText'])
     ]
+
     doc.build(content)
 
 # ================= Threat Detection =================
@@ -52,6 +56,7 @@ def analyze_ai(text):
             {"role": "user", "content": text}
         ]
     )
+
     return response.choices[0].message.content
 
 # ================= IP =================
@@ -73,7 +78,9 @@ def scan_url(url):
     )
 
     analysis_id = res.json()["data"]["id"]
-    time.sleep(3)
+
+    # انتظار التحليل
+    time.sleep(6)
 
     report = requests.get(
         f"https://www.virustotal.com/api/v3/analyses/{analysis_id}",
@@ -95,12 +102,12 @@ else:
 ip = st.text_input("🌐 Enter IP")
 url = st.text_input("🔗 Enter URL")
 
-# ================= RUN =================
+# ================= تشغيل التحليل =================
 if st.button("🔍 Analyze"):
 
     risk = 0
 
-    # AI
+    # ===== تحليل AI =====
     if text:
         ai = analyze_ai(text)
 
@@ -112,20 +119,20 @@ if st.button("🔍 Analyze"):
         st.subheader("🚨 Threat Detection")
         st.write(threats)
 
-        # Risk من AI
         # Risk ذكي
-if len(threats) == 0:
-    risk += 5
-elif len(threats) == 1:
-    risk += 15
-else:
-    risk += 25
+        if len(threats) == 0:
+            risk += 5
+        elif len(threats) == 1:
+            risk += 15
+        else:
+            risk += 25
 
+        # PDF
         create_pdf(ai)
         with open("report.pdf", "rb") as f:
-            st.download_button("📥 PDF", f, "report.pdf")
+            st.download_button("📥 Download PDF", f, "report.pdf")
 
-    # IP
+    # ===== IP =====
     if ip:
         data = get_ip(ip)
 
@@ -135,14 +142,15 @@ else:
             st.write(f"Country: {data['country']}")
             st.write(f"ISP: {data['isp']}")
 
+            # Risk IP
             if ip.startswith("192.168"):
-    risk += 5  # داخلي
-elif "Google" in data["isp"]:
-    risk += 10
-else:
-    risk += 30
+                risk += 5
+            elif "Google" in data["isp"]:
+                risk += 10
+            else:
+                risk += 30
 
-    # URL
+    # ===== URL =====
     if url:
         vt = scan_url(url)
 
@@ -156,12 +164,12 @@ else:
         st.metric("Safe", safe)
 
         if mal > 0:
-            st.error("Dangerous URL")
+            st.error("🚨 Dangerous URL")
             risk += 50
         else:
-            st.success("Safe URL")
+            st.success("✅ Safe URL")
 
-    # Risk النهائي
+    # ===== Risk النهائي =====
     st.subheader("🔥 Risk Score")
 
     if risk < 30:
@@ -174,10 +182,10 @@ else:
     # حفظ
     st.session_state.history.append({"Risk": risk})
 
-# Dashboard
+# ================= Dashboard =================
 st.subheader("📊 Dashboard")
 
 if st.session_state.history:
     df = pd.DataFrame(st.session_state.history)
-df.index = range(1, len(df)+1)
-st.line_chart(df)
+    df.index = range(1, len(df)+1)
+    st.line_chart(df)
