@@ -187,5 +187,5 @@ st.subheader("📊 Dashboard")
 
 if st.session_state.history:
     df = pd.DataFrame(st.session_state.history)
-    df.index = range(1, len(df)+1)
-    st.line_chart(df)
+
+    st.line_chart(df, y="Risk")
