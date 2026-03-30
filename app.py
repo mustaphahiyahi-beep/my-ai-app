@@ -8,120 +8,114 @@ import pandas as pd
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
 from reportlab.lib.styles import getSampleStyleSheet
 
-# ================= UI STYLE =================
-st.set_page_config(page_title="Cyber AI Pro", page_icon="🛡️", layout="wide")
+# ================= UI ADVANCED =================
 
-st.markdown("""
-<style>
-.stApp {
-    background-color: #0e1117;
-    color: white;
-}
-.card {
-    background-color: #161b22;
-    padding: 20px;
-    border-radius: 12px;
-    margin-bottom: 15px;
-}
-</style>
-""", unsafe_allow_html=True)
+st.sidebar.title("🛡️ Cyber AI Pro")
+st.sidebar.markdown("Advanced Security Platform")
 
-# ================= API =================
-client = Groq(api_key=st.secrets["GROQ_API_KEY"])
-
-if "history" not in st.session_state:
-    st.session_state.history = []
+page = st.sidebar.radio(
+    "Navigation",
+    ["📊 Dashboard", "📁 Logs", "🌐 IP Analysis", "🔗 URL Scan", "🦠 Malware Scan"]
+)
 
 st.title("🛡️ Cybersecurity AI Platform")
 
-# ================= PDF =================
-def create_pdf(text):
-    doc = SimpleDocTemplate("report.pdf")
-    styles = getSampleStyleSheet()
+# ================= DASHBOARD =================
+if page == "📊 Dashboard":
+    st.subheader("📊 Risk Overview")
 
-    content = [
-        Paragraph("Cybersecurity Report", styles['Title']),
-        Spacer(1, 12),
-        Paragraph(text, styles['BodyText'])
-    ]
+    if st.session_state.history:
+        df = pd.DataFrame(st.session_state.history)
+        st.line_chart(df["Risk"])
 
-    doc.build(content)
+    st.info("System monitoring active...")
 
-# ================= Threat Detection =================
-def detect_threats(text):
-    text = text.lower()
-    threats = []
+# ================= LOGS =================
+elif page == "📁 Logs":
+    st.subheader("📁 Log Analysis")
 
-    if "sql" in text:
-        threats.append("SQL Injection")
-    if "login" in text:
-        threats.append("Brute Force")
-    if "malware" in text:
-        threats.append("Malware")
+    log_file = st.file_uploader("Upload log file", type=["txt", "log"])
+    text = ""
 
-    return threats
+    if log_file:
+        text = log_file.read().decode("utf-8")
+    else:
+        text = st.text_area("Paste logs")
 
-# ================= AI =================
-def analyze_ai(text):
-    response = client.chat.completions.create(
-        model="llama-3.1-8b-instant",
-        messages=[
-            {"role": "system", "content": "You are a SOC expert."},
-            {"role": "user", "content": text}
-        ]
-    )
-    return response.choices[0].message.content
+    if st.button("Analyze Logs"):
+        with st.spinner("Analyzing logs..."):
+            ai = analyze_ai(text)
+
+        st.success("Analysis Complete")
+        st.write(ai)
 
 # ================= IP =================
-def get_ip(ip):
-    try:
-        return requests.get(f"http://ip-api.com/json/{ip}").json()
-    except:
-        return None
+elif page == "🌐 IP Analysis":
+    st.subheader("🌐 IP Intelligence")
+
+    ip = st.text_input("Enter IP")
+
+    if st.button("Check IP"):
+        with st.spinner("Fetching IP info..."):
+            data = get_ip(ip)
+
+        if data and data["status"] == "success":
+            st.success("IP Loaded")
+
+            col1, col2 = st.columns(2)
+            col1.metric("Country", data["country"])
+            col2.metric("ISP", data["isp"])
+
+            if ip.startswith("192.168"):
+                st.warning("⚠️ Internal IP")
 
 # ================= URL =================
-def scan_url(url):
-    key = st.secrets["VIRUSTOTAL_API_KEY"]
-    headers = {"x-apikey": key}
+elif page == "🔗 URL Scan":
+    st.subheader("🔗 URL Scanner")
 
-    res = requests.post(
-        "https://www.virustotal.com/api/v3/urls",
-        headers=headers,
-        data={"url": url}
-    )
+    url = st.text_input("Enter URL")
 
-    analysis_id = res.json()["data"]["id"]
-    time.sleep(8)
+    if st.button("Scan URL"):
+        with st.spinner("Scanning URL..."):
+            vt = scan_url(url)
 
-    report = requests.get(
-        f"https://www.virustotal.com/api/v3/analyses/{analysis_id}",
-        headers=headers
-    )
+        stats = vt["data"]["attributes"]["stats"]
 
-    return report.json()
+        mal = stats.get("malicious", 0)
+        safe = stats.get("harmless", 0)
+
+        col1, col2 = st.columns(2)
+        col1.metric("Malicious", mal)
+        col2.metric("Safe", safe)
+
+        if mal > 0:
+            st.error("🚨 Dangerous")
+        else:
+            st.success("✅ Safe")
 
 # ================= FILE =================
-def scan_file(file):
-    key = st.secrets["VIRUSTOTAL_API_KEY"]
-    headers = {"x-apikey": key}
+elif page == "🦠 Malware Scan":
+    st.subheader("🦠 File Scanner")
 
-    files = {"file": file.getvalue()}
+    file = st.file_uploader("Upload file")
 
-    res = requests.post(
-        "https://www.virustotal.com/api/v3/files",
-        headers=headers,
-        files=files
-    )
+    if file and st.button("Scan File"):
+        with st.spinner("Scanning file..."):
+            vt_file = scan_file(file)
 
-    analysis_id = res.json()["data"]["id"]
-    time.sleep(15)
+        stats = vt_file["data"]["attributes"]["stats"]
 
-    report = requests.get(
-        f"https://www.virustotal.com/api/v3/analyses/{analysis_id}",
-        headers=headers
-    )
+        mal = stats.get("malicious", 0)
+        safe = stats.get("harmless", 0)
 
-    return report.json()
+        col1, col2 = st.columns(2)
+        col1.metric("Malicious", mal)
+        col2.metric("Safe", safe)
+
+        if mal > 0:
+            st.error("🚨 Malware detected!")
+        else:
+            st.success("✅ File is safe")
 
 # ================= UI INPUT =================
 col1, col2 = st.columns(2)
