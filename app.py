@@ -10,7 +10,6 @@ from reportlab.lib.styles import getSampleStyleSheet
 
 # إعداد
 st.set_page_config(page_title="Cybersecurity AI Pro", page_icon="🛡️")
-
 client = Groq(api_key=st.secrets["GROQ_API_KEY"])
 
 # ذاكرة
@@ -23,27 +22,40 @@ st.title("🛡️ Cybersecurity AI Pro")
 def create_pdf(text):
     doc = SimpleDocTemplate("report.pdf")
     styles = getSampleStyleSheet()
-
-    content = []
-    content.append(Paragraph("Cybersecurity Incident Report", styles['Title']))
-    content.append(Spacer(1, 12))
-    content.append(Paragraph(text, styles['BodyText']))
-
+    content = [
+        Paragraph("Cybersecurity Report", styles['Title']),
+        Spacer(1, 12),
+        Paragraph(text, styles['BodyText'])
+    ]
     doc.build(content)
 
+# ================= Threat Detection =================
+def detect_threats(text):
+    text = text.lower()
+    threats = []
+
+    if "sql" in text:
+        threats.append("SQL Injection")
+    if "login" in text:
+        threats.append("Brute Force")
+    if "malware" in text:
+        threats.append("Malware")
+
+    return threats
+
 # ================= AI =================
-def analyze_with_ai(text):
+def analyze_ai(text):
     response = client.chat.completions.create(
         model="llama-3.1-8b-instant",
         messages=[
-            {"role": "system", "content": "You are a professional SOC analyst."},
+            {"role": "system", "content": "You are a SOC expert."},
             {"role": "user", "content": text}
         ]
     )
     return response.choices[0].message.content
 
 # ================= IP =================
-def get_ip_info(ip):
+def get_ip(ip):
     try:
         return requests.get(f"http://ip-api.com/json/{ip}").json()
     except:
@@ -51,19 +63,16 @@ def get_ip_info(ip):
 
 # ================= VirusTotal =================
 def scan_url(url):
-    api_key = st.secrets["VIRUSTOTAL_API_KEY"]
-    headers = {"x-apikey": api_key}
-    data = {"url": url}
+    key = st.secrets["VIRUSTOTAL_API_KEY"]
+    headers = {"x-apikey": key}
 
-    response = requests.post(
+    res = requests.post(
         "https://www.virustotal.com/api/v3/urls",
         headers=headers,
-        data=data
+        data={"url": url}
     )
 
-    result = response.json()
-    analysis_id = result["data"]["id"]
-
+    analysis_id = res.json()["data"]["id"]
     time.sleep(3)
 
     report = requests.get(
@@ -73,132 +82,93 @@ def scan_url(url):
 
     return report.json()
 
-# ================= واجهة =================
+# ================= UI =================
 
-# إدخال
-uploaded_file = st.file_uploader("📁 Upload Log File", type=["txt", "log"])
-user_input = ""
+file = st.file_uploader("📁 Upload Logs", type=["txt", "log"])
+text = ""
 
-if uploaded_file:
-    user_input = uploaded_file.read().decode("utf-8")
-    st.success("✅ File uploaded")
+if file:
+    text = file.read().decode("utf-8")
 else:
-    user_input = st.text_area("💬 Enter logs")
+    text = st.text_area("💬 Enter logs")
 
-# تقليل الحجم
-if len(user_input) > 4000:
-    user_input = user_input[:4000]
-    st.warning("⚠️ Text trimmed")
+ip = st.text_input("🌐 Enter IP")
+url = st.text_input("🔗 Enter URL")
 
-# IP
-st.subheader("🌐 IP Intelligence")
-ip_input = st.text_input("Enter IP")
-
-# URL
-st.subheader("🔗 URL Scanner")
-url_input = st.text_input("Enter URL")
-
-# ================= زر =================
+# ================= RUN =================
 if st.button("🔍 Analyze"):
 
-    total_risk = 0
+    risk = 0
 
-    # ===== AI =====
-    if user_input:
-        try:
-            ai_result = analyze_with_ai(user_input)
+    # AI
+    if text:
+        ai = analyze_ai(text)
 
-            st.subheader("🧠 AI Analysis")
-            st.success(ai_result)
+        st.subheader("🧠 AI Analysis")
+        st.success(ai)
 
-            create_pdf(ai_result)
-            with open("report.pdf", "rb") as f:
-                st.download_button("📥 Download PDF", f, "report.pdf")
+        threats = detect_threats(text)
 
-            total_risk += 40
+        st.subheader("🚨 Threat Detection")
+        st.write(threats)
 
-        except Exception as e:
-            st.error(f"AI Error: {e}")
+        # Risk من AI
+        risk += 20 + (10 * len(threats))
 
-    # ===== IP =====
-    if ip_input:
-        ip_data = get_ip_info(ip_input)
+        create_pdf(ai)
+        with open("report.pdf", "rb") as f:
+            st.download_button("📥 PDF", f, "report.pdf")
 
-        if ip_data and ip_data["status"] == "success":
-            st.subheader("🌍 IP Details")
+    # IP
+    if ip:
+        data = get_ip(ip)
 
-            col1, col2 = st.columns(2)
-            col1.write(f"Country: {ip_data['country']}")
-            col1.write(f"City: {ip_data['city']}")
-            col2.write(f"ISP: {ip_data['isp']}")
-            col2.write(f"Org: {ip_data['org']}")
+        if data and data["status"] == "success":
+            st.subheader("🌍 IP Info")
 
-            if "Google" in ip_data["isp"]:
-                risk_ip = 10
+            st.write(f"Country: {data['country']}")
+            st.write(f"ISP: {data['isp']}")
+
+            if "Google" in data["isp"]:
+                risk += 10
             else:
-                risk_ip = 30
+                risk += 25
 
-            total_risk += risk_ip
+    # URL
+    if url:
+        vt = scan_url(url)
 
+        stats = vt["data"]["attributes"]["stats"]
+        mal = stats.get("malicious", 0)
+        safe = stats.get("harmless", 0)
+
+        st.subheader("🧪 URL Scan")
+
+        st.metric("Malicious", mal)
+        st.metric("Safe", safe)
+
+        if mal > 0:
+            st.error("Dangerous URL")
+            risk += 50
         else:
-            st.error("IP Error")
+            st.success("Safe URL")
 
-    # ===== URL =====
-    if url_input:
-        try:
-            vt = scan_url(url_input)
-            stats = vt["data"]["attributes"]["stats"]
-
-            malicious = stats.get("malicious", 0)
-            harmless = stats.get("harmless", 0)
-
-            st.subheader("🧪 VirusTotal Result")
-
-            col1, col2 = st.columns(2)
-            col1.metric("🚨 Malicious", malicious)
-            col2.metric("✅ Safe", harmless)
-
-            total = malicious + harmless
-            score = (malicious / total) * 100 if total > 0 else 0
-
-            st.progress(int(score))
-
-            if malicious > 0:
-                st.error("⚠️ Dangerous URL")
-                total_risk += 50
-            else:
-                st.success("✅ Safe URL")
-
-        except Exception as e:
-            st.error(f"URL Error: {e}")
-
-    # ===== Risk Score =====
+    # Risk النهائي
     st.subheader("🔥 Risk Score")
 
-    if total_risk < 30:
-        st.success(f"Low Risk: {total_risk}%")
-    elif total_risk < 70:
-        st.warning(f"Medium Risk: {total_risk}%")
+    if risk < 30:
+        st.success(f"Low Risk: {risk}%")
+    elif risk < 70:
+        st.warning(f"Medium Risk: {risk}%")
     else:
-        st.error(f"High Risk: {total_risk}%")
+        st.error(f"High Risk: {risk}%")
 
-    # ===== History =====
-    st.session_state.history.append({
-        "Input": user_input[:50],
-        "IP": ip_input,
-        "URL": url_input,
-        "Risk": total_risk
-    })
+    # حفظ
+    st.session_state.history.append({"Risk": risk})
 
-# ================= Dashboard =================
-
+# Dashboard
 st.subheader("📊 Dashboard")
 
 if st.session_state.history:
     df = pd.DataFrame(st.session_state.history)
-
-    st.dataframe(df)
-
     st.line_chart(df["Risk"])
-else:
-    st.info("No data yet")
