@@ -8,8 +8,8 @@ import pandas as pd
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
 from reportlab.lib.styles import getSampleStyleSheet
 
-# ================= إعداد الصفحة =================
-st.set_page_config(page_title="Cyber AI Pro", page_icon="🛡️", layout="wide")
+# ================= PAGE =================
+st.set_page_config(page_title="ThreatGuard AI", page_icon="🧠", layout="wide")
 
 # ================= STYLE =================
 st.markdown("""
@@ -18,30 +18,55 @@ st.markdown("""
     background-color: #0e1117;
     color: white;
 }
+
+/* Top Tabs */
+.topbar {
+    text-align: center;
+    font-size: 22px;
+    margin-bottom: 20px;
+    color: #8b949e;
+}
+
+/* Buttons */
+.big-btn {
+    background: linear-gradient(90deg, #1f6feb, #9333ea);
+    padding: 15px;
+    border-radius: 20px;
+    text-align: center;
+    color: white;
+    font-weight: bold;
+}
+
+/* Card */
+.card {
+    background-color: #161b22;
+    padding: 20px;
+    border-radius: 12px;
+    margin-top: 15px;
+}
 </style>
 """, unsafe_allow_html=True)
 
 # ================= API =================
 client = Groq(api_key=st.secrets["GROQ_API_KEY"])
 
-# ✅ حل مشكلة session_state
+# ✅ fix history bug
 if "history" not in st.session_state:
     st.session_state.history = []
 
-# ================= PDF =================
-def create_pdf(text):
-    doc = SimpleDocTemplate("report.pdf")
-    styles = getSampleStyleSheet()
+# ================= LOGO =================
+st.markdown("""
+<h1 style='text-align:center;'>🧠 ThreatGuard AI</h1>
+<p style='text-align:center; color:gray;'>Next-Gen Cybersecurity Platform</p>
+""", unsafe_allow_html=True)
 
-    content = [
-        Paragraph("Cybersecurity Report", styles['Title']),
-        Spacer(1, 12),
-        Paragraph(text, styles['BodyText'])
-    ]
+# ================= NAV =================
+page = st.sidebar.radio(
+    "Navigation",
+    ["🏠 Home", "📁 Logs", "🌐 IP", "🔗 URL", "🦠 Malware", "📊 Dashboard"]
+)
 
-    doc.build(content)
-
-# ================= AI =================
+# ================= FUNCTIONS =================
 def analyze_ai(text):
     response = client.chat.completions.create(
         model="llama-3.1-8b-instant",
@@ -52,28 +77,23 @@ def analyze_ai(text):
     )
     return response.choices[0].message.content
 
-# ================= Threat Detection =================
 def detect_threats(text):
     text = text.lower()
     threats = []
-
     if "sql" in text:
         threats.append("SQL Injection")
     if "login" in text:
         threats.append("Brute Force")
     if "malware" in text:
         threats.append("Malware")
-
     return threats
 
-# ================= IP =================
 def get_ip(ip):
     try:
         return requests.get(f"http://ip-api.com/json/{ip}").json()
     except:
         return None
 
-# ================= URL =================
 def scan_url(url):
     key = st.secrets["VIRUSTOTAL_API_KEY"]
     headers = {"x-apikey": key}
@@ -94,7 +114,6 @@ def scan_url(url):
 
     return report.json()
 
-# ================= FILE =================
 def scan_file(file):
     key = st.secrets["VIRUSTOTAL_API_KEY"]
     headers = {"x-apikey": key}
@@ -117,93 +136,89 @@ def scan_file(file):
 
     return report.json()
 
-# ================= SIDEBAR =================
-st.sidebar.title("🛡️ Cyber AI Pro")
-page = st.sidebar.radio(
-    "Navigation",
-    ["📊 Dashboard", "📁 Logs", "🌐 IP Analysis", "🔗 URL Scan", "🦠 Malware Scan"]
-)
+def create_pdf(text):
+    doc = SimpleDocTemplate("report.pdf")
+    styles = getSampleStyleSheet()
 
-st.title("🛡️ Cybersecurity AI Platform")
+    content = [
+        Paragraph("Cybersecurity Report", styles['Title']),
+        Spacer(1, 12),
+        Paragraph(text, styles['BodyText'])
+    ]
 
-# ================= DASHBOARD =================
-if page == "📊 Dashboard":
-    st.subheader("📊 Risk Overview")
+    doc.build(content)
 
-    if len(st.session_state.history) > 0:
-        df = pd.DataFrame(st.session_state.history)
-        df["Risk"] = pd.to_numeric(df["Risk"])
-        st.line_chart(df["Risk"])
+# ================= HOME =================
+if page == "🏠 Home":
+    st.markdown("## 🚀 Quick Actions")
 
-    st.info("System monitoring active...")
+    col1, col2, col3 = st.columns(3)
+
+    col1.markdown('<div class="big-btn">📁 Analyze Logs</div>', unsafe_allow_html=True)
+    col2.markdown('<div class="big-btn">🌐 Scan IP</div>', unsafe_allow_html=True)
+    col3.markdown('<div class="big-btn">🦠 Scan File</div>', unsafe_allow_html=True)
+
+    st.info("Use sidebar to navigate")
 
 # ================= LOGS =================
 elif page == "📁 Logs":
     st.subheader("📁 Log Analysis")
 
-    log_file = st.file_uploader("Upload log file", type=["txt", "log"])
+    file = st.file_uploader("Upload log file", type=["txt", "log"])
     text = ""
 
-    if log_file:
-        text = log_file.read().decode("utf-8")
+    if file:
+        text = file.read().decode("utf-8")
     else:
         text = st.text_area("Paste logs")
 
-    if st.button("Analyze Logs"):
+    if st.button("Analyze"):
         with st.spinner("Analyzing..."):
             ai = analyze_ai(text)
 
-        st.success("Analysis Complete")
-        st.write(ai)
+        st.markdown(f"<div class='card'>{ai}</div>", unsafe_allow_html=True)
 
         threats = detect_threats(text)
-        st.subheader("🚨 Threat Detection")
-        st.write(threats)
+        st.write("🚨 Threats:", threats)
 
-        # Risk
         risk = 25 if len(threats) > 1 else 15
         st.session_state.history.append({"Risk": risk})
 
         create_pdf(ai)
         with open("report.pdf", "rb") as f:
-            st.download_button("📥 Download Report", f, "report.pdf")
+            st.download_button("📥 Download PDF", f, "report.pdf")
 
 # ================= IP =================
-elif page == "🌐 IP Analysis":
-    st.subheader("🌐 IP Intelligence")
+elif page == "🌐 IP":
+    st.subheader("🌐 IP Analysis")
 
     ip = st.text_input("Enter IP")
 
-    if st.button("Check IP"):
-        with st.spinner("Loading..."):
-            data = get_ip(ip)
+    if st.button("Analyze IP"):
+        data = get_ip(ip)
 
         if data and data["status"] == "success":
-            col1, col2 = st.columns(2)
-            col1.metric("Country", data["country"])
-            col2.metric("ISP", data["isp"])
+            st.metric("Country", data["country"])
+            st.metric("ISP", data["isp"])
 
             if ip.startswith("192.168"):
                 st.warning("⚠️ Internal IP")
 
 # ================= URL =================
-elif page == "🔗 URL Scan":
+elif page == "🔗 URL":
     st.subheader("🔗 URL Scanner")
 
     url = st.text_input("Enter URL")
 
     if st.button("Scan URL"):
-        with st.spinner("Scanning..."):
-            vt = scan_url(url)
-
+        vt = scan_url(url)
         stats = vt["data"]["attributes"]["stats"]
 
         mal = stats.get("malicious", 0)
         safe = stats.get("harmless", 0)
 
-        col1, col2 = st.columns(2)
-        col1.metric("Malicious", mal)
-        col2.metric("Safe", safe)
+        st.metric("Malicious", mal)
+        st.metric("Safe", safe)
 
         if mal > 0:
             st.error("🚨 Dangerous")
@@ -211,25 +226,33 @@ elif page == "🔗 URL Scan":
             st.success("✅ Safe")
 
 # ================= FILE =================
-elif page == "🦠 Malware Scan":
-    st.subheader("🦠 File Scanner")
+elif page == "🦠 Malware":
+    st.subheader("🦠 Malware Scanner")
 
     file = st.file_uploader("Upload file")
 
     if file and st.button("Scan File"):
-        with st.spinner("Scanning file..."):
-            vt_file = scan_file(file)
-
+        vt_file = scan_file(file)
         stats = vt_file["data"]["attributes"]["stats"]
 
         mal = stats.get("malicious", 0)
         safe = stats.get("harmless", 0)
 
-        col1, col2 = st.columns(2)
-        col1.metric("Malicious", mal)
-        col2.metric("Safe", safe)
+        st.metric("Malicious", mal)
+        st.metric("Safe", safe)
 
         if mal > 0:
             st.error("🚨 Malware detected!")
         else:
-            st.success("✅ File is safe")
+            st.success("✅ Safe")
+
+# ================= DASHBOARD =================
+elif page == "📊 Dashboard":
+    st.subheader("📊 Risk Dashboard")
+
+    if len(st.session_state.history) > 0:
+        df = pd.DataFrame(st.session_state.history)
+        df["Risk"] = pd.to_numeric(df["Risk"])
+        st.line_chart(df["Risk"])
+    else:
+        st.info("No data yet")
