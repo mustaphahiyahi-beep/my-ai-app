@@ -8,15 +8,31 @@ import pandas as pd
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
 from reportlab.lib.styles import getSampleStyleSheet
 
-# ================= إعداد الصفحة =================
-st.set_page_config(page_title="Cybersecurity AI Pro", page_icon="🛡️")
+# ================= UI STYLE =================
+st.set_page_config(page_title="Cyber AI Pro", page_icon="🛡️", layout="wide")
 
+st.markdown("""
+<style>
+.stApp {
+    background-color: #0e1117;
+    color: white;
+}
+.card {
+    background-color: #161b22;
+    padding: 20px;
+    border-radius: 12px;
+    margin-bottom: 15px;
+}
+</style>
+""", unsafe_allow_html=True)
+
+# ================= API =================
 client = Groq(api_key=st.secrets["GROQ_API_KEY"])
 
 if "history" not in st.session_state:
     st.session_state.history = []
 
-st.title("🛡️ Cybersecurity AI Pro")
+st.title("🛡️ Cybersecurity AI Platform")
 
 # ================= PDF =================
 def create_pdf(text):
@@ -63,7 +79,7 @@ def get_ip(ip):
     except:
         return None
 
-# ================= URL Scan =================
+# ================= URL =================
 def scan_url(url):
     key = st.secrets["VIRUSTOTAL_API_KEY"]
     headers = {"x-apikey": key}
@@ -75,7 +91,6 @@ def scan_url(url):
     )
 
     analysis_id = res.json()["data"]["id"]
-
     time.sleep(8)
 
     report = requests.get(
@@ -85,7 +100,7 @@ def scan_url(url):
 
     return report.json()
 
-# ================= Malware Scan =================
+# ================= FILE =================
 def scan_file(file):
     key = st.secrets["VIRUSTOTAL_API_KEY"]
     headers = {"x-apikey": key}
@@ -99,8 +114,7 @@ def scan_file(file):
     )
 
     analysis_id = res.json()["data"]["id"]
-
-    time.sleep(10)
+    time.sleep(15)
 
     report = requests.get(
         f"https://www.virustotal.com/api/v3/analyses/{analysis_id}",
@@ -109,38 +123,41 @@ def scan_file(file):
 
     return report.json()
 
-# ================= UI =================
+# ================= UI INPUT =================
+col1, col2 = st.columns(2)
 
-st.subheader("📁 Upload Log File")
-log_file = st.file_uploader("Upload logs", type=["txt", "log"])
+with col1:
+    st.markdown("### 📁 Logs")
+    log_file = st.file_uploader("Upload log file", type=["txt", "log"])
+    text = ""
+    if log_file:
+        text = log_file.read().decode("utf-8")
+    else:
+        text = st.text_area("Paste logs here")
 
-st.subheader("🦠 Malware File Scanner")
-malware_file = st.file_uploader("Upload file to scan", type=None)
+with col2:
+    st.markdown("### 🌐 Intelligence")
+    ip = st.text_input("Enter IP")
+    url = st.text_input("Enter URL")
 
-text = ""
-if log_file:
-    text = log_file.read().decode("utf-8")
-else:
-    text = st.text_area("💬 Enter logs")
+st.markdown("### 🦠 Malware Scanner")
+malware_file = st.file_uploader("Upload file (EXE, PDF, etc)")
 
-ip = st.text_input("🌐 Enter IP")
-url = st.text_input("🔗 Enter URL")
-
-# ================= تحليل =================
-if st.button("🔍 Analyze"):
+# ================= ANALYSIS =================
+if st.button("🚀 Analyze"):
 
     risk = 0
 
-    # ===== Logs =====
+    # ===== AI =====
     if text:
         ai = analyze_ai(text)
 
-        st.subheader("🧠 AI Analysis")
-        st.success(ai)
+        st.markdown("## 🧠 AI Analysis")
+        st.markdown(f"<div class='card'>{ai}</div>", unsafe_allow_html=True)
 
         threats = detect_threats(text)
 
-        st.subheader("🚨 Threat Detection")
+        st.markdown("## 🚨 Threat Detection")
         st.write(threats)
 
         if len(threats) == 0:
@@ -152,19 +169,19 @@ if st.button("🔍 Analyze"):
 
         create_pdf(ai)
         with open("report.pdf", "rb") as f:
-            st.download_button("📥 Download PDF", f, "report.pdf")
+            st.download_button("📥 Download Report", f, "report.pdf")
 
     # ===== IP =====
     if ip:
         data = get_ip(ip)
 
         if data and data["status"] == "success":
-            st.subheader("🌍 IP Info")
+            st.markdown("## 🌍 IP Info")
             st.write(f"Country: {data['country']}")
             st.write(f"ISP: {data['isp']}")
 
             if ip.startswith("192.168"):
-                st.info("⚠️ Internal IP detected")
+                st.warning("⚠️ Internal IP (Not external attacker)")
                 risk += 5
             elif "Google" in data["isp"]:
                 risk += 10
@@ -174,12 +191,12 @@ if st.button("🔍 Analyze"):
     # ===== URL =====
     if url:
         vt = scan_url(url)
-
         stats = vt["data"]["attributes"]["stats"]
+
         mal = stats.get("malicious", 0)
         safe = stats.get("harmless", 0)
 
-        st.subheader("🧪 URL Scan")
+        st.markdown("## 🧪 URL Scan")
         st.metric("Malicious", mal)
         st.metric("Safe", safe)
 
@@ -189,15 +206,15 @@ if st.button("🔍 Analyze"):
         else:
             st.success("✅ Safe URL")
 
-    # ===== Malware File =====
+    # ===== FILE =====
     if malware_file:
         vt_file = scan_file(malware_file)
-
         stats = vt_file["data"]["attributes"]["stats"]
+
         mal = stats.get("malicious", 0)
         safe = stats.get("harmless", 0)
 
-        st.subheader("🦠 Malware Scan Result")
+        st.markdown("## 🦠 Malware Scan")
         st.metric("Malicious", mal)
         st.metric("Safe", safe)
 
@@ -207,8 +224,8 @@ if st.button("🔍 Analyze"):
         else:
             st.success("✅ File is safe")
 
-    # ===== Risk =====
-    st.subheader("🔥 Risk Score")
+    # ===== RISK =====
+    st.markdown("## 🔥 Risk Score")
 
     if risk < 30:
         st.success(f"Low Risk: {risk}%")
@@ -219,9 +236,10 @@ if st.button("🔍 Analyze"):
 
     st.session_state.history.append({"Risk": risk})
 
-# ===== Dashboard =====
-st.subheader("📊 Dashboard")
+# ================= DASHBOARD =================
+st.markdown("## 📊 Dashboard")
 
 if st.session_state.history:
     df = pd.DataFrame(st.session_state.history)
-    st.line_chart(df, y="Risk")
+    df["Risk"] = pd.to_numeric(df["Risk"])
+    st.line_chart(df["Risk"])
