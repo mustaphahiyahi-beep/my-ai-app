@@ -1,233 +1,168 @@
 import streamlit as st
+import firebase_admin
+from firebase_admin import credentials, firestore, auth
+import pandas as pd
+import datetime
 import smtplib
 from email.mime.text import MIMEText
 import re
-from datetime import datetime
-import pandas as pd
-import requests
-import json
-# =============================
-# Webhook Simulator (Logs API)
-# =============================
-st.sidebar.title("🔗 API Receiver")
 
-incoming_log = st.sidebar.text_area("📥 Incoming Log (simulate API)")
+# ===============================
+# Firebase Setup
+# ===============================
+if not firebase_admin._apps:
+    cred = credentials.Certificate("firebase_key.json")
+    firebase_admin.initialize_app(cred)
 
-if st.sidebar.button("📡 Send Log to System"):
+db = firestore.client()
+
+# ===============================
+# Email Alert Function
+# ===============================
+def send_email(ip, threat, risk):
+    sender = "YOUR_EMAIL@gmail.com"
+    password = "YOUR_APP_PASSWORD"
+    receiver = sender
+
+    msg = MIMEText(f"""
+🚨 Cyber Security Alert
+
+IP: {ip}
+Threat: {threat}
+Risk: {risk}%
+""")
+
+    msg['Subject'] = "🚨 Security Alert"
+    msg['From'] = sender
+    msg['To'] = receiver
+
     try:
-        data = json.loads(incoming_log)
-
-        ip = data.get("ip", "Unknown")
-        text = data.get("event", "")
-
-        ip, threats, risk = analyze(text)
-
-        st.session_state.history.append({
-            "ip": ip,
-            "threats": ', '.join(threats),
-            "risk": risk,
-            "time": datetime.now().strftime("%H:%M:%S")
-        })
-
-        if risk > 50:
-            send_email(ip, threats, risk)
-
-        st.success("✅ Log received from API!")
-
+        server = smtplib.SMTP("smtp.gmail.com", 587)
+        server.starttls()
+        server.login(sender, password)
+        server.send_message(msg)
+        server.quit()
     except:
-        st.error("❌ Invalid JSON")
-        
+        pass
 
-# =============================
-# إعداد الصفحة
-# =============================
-st.set_page_config(page_title="Cyber AI Pro", layout="wide")
-
-# =============================
-# تصميم احترافي (CSS)
-# =============================
-st.markdown("""
-<style>
-body {
-    background-color: #0e1117;
-    color: white;
-}
-
-.big-title {
-    font-size: 40px;
-    font-weight: bold;
-    color: #00c6ff;
-}
-
-.card {
-    background: #161b22;
-    padding: 20px;
-    border-radius: 15px;
-    margin-top: 10px;
-    box-shadow: 0px 0px 10px #00c6ff33;
-}
-
-button {
-    background: linear-gradient(90deg, #00c6ff, #0072ff);
-    color: white !important;
-    border-radius: 10px !important;
-}
-</style>
-""", unsafe_allow_html=True)
-
-# =============================
-# Session
-# =============================
-if "history" not in st.session_state:
-    st.session_state.history = []
-
-# =============================
-# تحليل الهجمات
-# =============================
+# ===============================
+# AI Threat Detection
+# ===============================
 def analyze(text):
     threats = []
     risk = 0
 
-    ip_match = re.search(r"\b(?:\d{1,3}\.){3}\d{1,3}\b", text)
-    ip = ip_match.group(0) if ip_match else "Unknown"
-
-    if "sql" in text.lower() or "union select" in text.lower():
+    if re.search(r"(UNION|SELECT|DROP|OR 1=1)", text, re.I):
         threats.append("SQL Injection")
         risk += 40
 
-    if "<script>" in text.lower():
+    if "<script>" in text:
         threats.append("XSS Attack")
         risk += 30
 
-    if text.lower().count("failed login") >= 2:
+    if "Failed login" in text:
         threats.append("Brute Force")
-        risk += 30
+        risk += 20
 
-    if risk > 0:
-        send_email(ip, threats, risk)
+    if risk == 0:
+        threats.append("Safe")
 
-    return ip, threats, risk
+    return ", ".join(threats), min(risk, 100)
 
-# =============================
-# إرسال إيميل
-# =============================
-def send_email(ip, threats, risk):
-    try:
-        sender = st.secrets["EMAIL"]
-        password = st.secrets["EMAIL_PASSWORD"]
+# ===============================
+# Auth UI
+# ===============================
+st.title("🛡️ Cyber AI SaaS")
 
-        message = f"""
-🚨 Cyber Security Alert
+menu = ["Login", "Signup"]
+choice = st.sidebar.selectbox("Menu", menu)
 
-IP: {ip}
-Threats: {', '.join(threats)}
-Risk: {risk}%
-"""
+# ===============================
+# SIGNUP
+# ===============================
+if choice == "Signup":
+    st.subheader("Create Account")
+    email = st.text_input("Email")
+    password = st.text_input("Password", type="password")
 
-        msg = MIMEText(message)
-        msg["Subject"] = "🚨 Alert"
-        msg["From"] = sender
-        msg["To"] = sender
+    if st.button("Signup"):
+        try:
+            user = auth.create_user(email=email, password=password)
+            st.success("Account created!")
+        except:
+            st.error("Error creating account")
 
-        server = smtplib.SMTP("smtp.gmail.com", 587)
-        server.starttls()
-        server.login(sender, password)
-        server.sendmail(sender, sender, msg.as_string())
-        server.quit()
+# ===============================
+# LOGIN
+# ===============================
+if choice == "Login":
+    st.subheader("Login")
+    email = st.text_input("Email")
+    password = st.text_input("Password", type="password")
 
-        st.success("✅ Email sent!")
+    if st.button("Login"):
+        st.session_state["user"] = email
+        st.success("Logged in!")
 
-    except Exception as e:
-        st.error(f"❌ Email Error: {e}")
+# ===============================
+# MAIN APP
+# ===============================
+if "user" in st.session_state:
 
-# =============================
-# IP Location
-# =============================
-def get_location(ip):
-    try:
-        res = requests.get(f"http://ip-api.com/json/{ip}").json()
-        return res.get("lat"), res.get("lon")
-    except:
-        return None, None
+    st.sidebar.success(f"👤 {st.session_state['user']}")
 
-# =============================
-# HEADER + LOGO
-# =============================
-st.markdown('<div class="big-title">⚡ Cyber AI Pro</div>', unsafe_allow_html=True)
-st.caption("Smart Cyber Security Dashboard 🤖")
+    st.header("📡 Send Log")
 
-# =============================
-# INPUT
-# =============================
-user_input = st.text_area("📥 Paste logs or attack data...", height=150)
+    log = st.text_area("Paste Log")
 
-# =============================
-# ANALYZE BUTTON
-# =============================
-if st.button("🚀 Analyze"):
+    if st.button("Analyze"):
+        ip = "Unknown"
 
-    ip, threats, risk = analyze(user_input)
+        threat, risk = analyze(log)
 
-    st.markdown('<div class="card">', unsafe_allow_html=True)
+        data = {
+            "user": st.session_state["user"],
+            "log": log,
+            "threat": threat,
+            "risk": risk,
+            "time": datetime.datetime.now()
+        }
 
-    if threats:
-        st.error("🚨 Threat Detected!")
-    else:
-        st.success("✅ Safe")
+        db.collection("logs").add(data)
 
-    st.write(f"🌐 IP: {ip}")
-    st.write(f"⚠️ Threats: {', '.join(threats) if threats else 'None'}")
-    st.write(f"🔥 Risk: {risk}%")
+        if risk > 20:
+            send_email(ip, threat, risk)
 
-    st.markdown('</div>', unsafe_allow_html=True)
+        st.success("Analyzed!")
+        st.write(f"Threat: {threat}")
+        st.write(f"Risk: {risk}%")
 
-    st.session_state.history.append({
-        "ip": ip,
-        "threats": ', '.join(threats),
-        "risk": risk,
-        "time": datetime.now().strftime("%H:%M:%S")
-    })
+    # ===============================
+    # Dashboard
+    # ===============================
+    st.header("📊 Dashboard")
 
-    if risk > 50:
-        send_email(ip, threats, risk)
-        st.success("📩 Email Alert Sent!")
+    logs = db.collection("logs").stream()
 
-# =============================
-# DASHBOARD
-# =============================
-st.subheader("📊 Dashboard")
+    data_list = []
+    for doc in logs:
+        data_list.append(doc.to_dict())
 
-if st.session_state.history:
-    df = pd.DataFrame(st.session_state.history)
+    if data_list:
+        df = pd.DataFrame(data_list)
 
-    col1, col2 = st.columns(2)
-
-    with col1:
         st.metric("Total Logs", len(df))
+        st.metric("Detected Attacks", len(df[df["risk"] > 0]))
 
-    with col2:
-        attacks = len(df[df["risk"] > 0])
-        st.metric("Detected Attacks", attacks)
+        st.line_chart(df["risk"])
 
-    # 📈 Chart
-    st.subheader("📈 Risk Trend")
-    st.line_chart(df["risk"])
+        st.dataframe(df)
 
-    # 🌍 Map
-    map_data = []
+    else:
+        st.info("No logs yet")
 
-    for item in st.session_state.history:
-        lat, lon = get_location(item["ip"])
-        if lat and lon:
-            map_data.append({"lat": lat, "lon": lon})
-
-    if map_data:
-        st.subheader("🌍 Attack Map")
-        st.map(map_data)
-
-    # 📜 History
-    st.subheader("📜 Logs History")
-    st.dataframe(df)
-
-else:
-    st.info("No data yet...")
+    # ===============================
+    # Logout
+    # ===============================
+    if st.sidebar.button("Logout"):
+        del st.session_state["user"]
