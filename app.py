@@ -39,15 +39,6 @@ else:
     signup_page()
 
 
-# ----------- NAVIGATION -----------
-
-
-# ⚠️ هذا هو المهم
-if menu == "Login":
-    login_page()
-
-elif menu == "Sign Up":
-    signup_page()
         
 # ===============================
 # Firebase Setup
