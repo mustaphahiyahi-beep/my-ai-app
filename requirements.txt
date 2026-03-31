@@ -1,6 +1,7 @@
 streamlit
 groq
 flask
+firebase-admin
 reportlab
 fastapi
 uvicorn
