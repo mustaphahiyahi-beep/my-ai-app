@@ -11,18 +11,13 @@ from firebase_admin import auth
 
 st.title("🛡️ Cyber AI SaaS")
 
-menu = st.selectbox("Choose", ["Login", "Sign Up"], key="menu")
+menu = st.selectbox("Choose", ["Login", "Sign Up"])
 
-email = st.text_input("Email", key="email_input")
-password = st.text_input("Password", type="password", key="password_input")
+if menu == "Login":
+    login_page()
 
-if menu == "Sign Up":
-    if st.button("Create Account", key="signup_btn"):
-        st.success("Account created ✅")
-
-elif menu == "Login":
-    if st.button("Login", key="login_btn"):
-        st.success("Logged in 🚀")
+elif menu == "Sign Up":
+    signup_page()
         
 # ===============================
 # Firebase Setup
