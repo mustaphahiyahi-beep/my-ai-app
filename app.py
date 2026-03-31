@@ -10,7 +10,12 @@ import firebase_admin
 from firebase_admin import auth
 
 
+
+st.set_page_config(page_title="Cyber AI SaaS", layout="centered")
+
 st.title("🛡️ Cyber AI SaaS")
+
+# ----------- PAGES -----------
 
 def login_page():
     st.subheader("Login")
@@ -32,10 +37,14 @@ def signup_page():
         st.success("Account created ✅")
 
 
+# ----------- NAVIGATION -----------
+
 menu = st.selectbox("Choose", ["Login", "Sign Up"])
 
+# ⚠️ هذا هو المهم
 if menu == "Login":
     login_page()
+
 elif menu == "Sign Up":
     signup_page()
         
