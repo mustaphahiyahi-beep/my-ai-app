@@ -6,7 +6,7 @@ import uuid
 # =========================
 # 🔐 CONFIG (عدلهم)
 # =========================
-FIREBASE_API_KEY = "PUT_YOUR_FIREBASE_API_KEY_HERE"
+FIREBASE_API_KEY = "AIzaSyAkpimXjXJlmK9jg8peVugH4r4Zpz3szis"
 STRIPE_PAYMENT_LINK = "https://buy.stripe.com/test_xxx"  # ضع رابط الدفع
 
 st.set_page_config(page_title="Cyber AI SaaS", layout="centered")
