@@ -5,6 +5,38 @@ import re
 from datetime import datetime
 import pandas as pd
 import requests
+import json
+# =============================
+# Webhook Simulator (Logs API)
+# =============================
+st.sidebar.title("🔗 API Receiver")
+
+incoming_log = st.sidebar.text_area("📥 Incoming Log (simulate API)")
+
+if st.sidebar.button("📡 Send Log to System"):
+    try:
+        data = json.loads(incoming_log)
+
+        ip = data.get("ip", "Unknown")
+        text = data.get("event", "")
+
+        ip, threats, risk = analyze(text)
+
+        st.session_state.history.append({
+            "ip": ip,
+            "threats": ', '.join(threats),
+            "risk": risk,
+            "time": datetime.now().strftime("%H:%M:%S")
+        })
+
+        if risk > 50:
+            send_email(ip, threats, risk)
+
+        st.success("✅ Log received from API!")
+
+    except:
+        st.error("❌ Invalid JSON")
+        
 
 # =============================
 # إعداد الصفحة
