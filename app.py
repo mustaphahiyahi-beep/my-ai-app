@@ -71,8 +71,8 @@ def analyze(text):
         threats.append("Brute Force")
         risk += 30
 
-    if risk > 100:
-        risk = 100
+    if risk > 50:
+        send_email(ip, threats, risk)
 
     return ip, threats, risk
 
@@ -80,37 +80,33 @@ def analyze(text):
 # إرسال إيميل
 # =============================
 def send_email(ip, threats, risk):
-    sender = st.secrets["EMAIL"]
-    password = st.secrets["EMAIL_PASSWORD"]
+    try:
+        sender = st.secrets["EMAIL"]
+        password = st.secrets["EMAIL_PASSWORD"]
 
-    message = f"""
+        message = f"""
 🚨 Cyber Security Alert
 
-Time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
 IP: {ip}
-
-Detected Threats:
-{', '.join(threats)}
-
-Risk Level: {risk}%
-
-Action Taken:
-✔ Logged
-✔ Alert Sent
-
-Stay Safe 🔐
+Threats: {', '.join(threats)}
+Risk: {risk}%
 """
 
-    msg = MIMEText(message)
-    msg["Subject"] = "🚨 Security Alert"
-    msg["From"] = sender
-    msg["To"] = sender
+        msg = MIMEText(message)
+        msg["Subject"] = "🚨 Alert"
+        msg["From"] = sender
+        msg["To"] = sender
 
-    server = smtplib.SMTP("smtp.gmail.com", 587)
-    server.starttls()
-    server.login(sender, password)
-    server.sendmail(sender, sender, msg.as_string())
-    server.quit()
+        server = smtplib.SMTP("smtp.gmail.com", 587)
+        server.starttls()
+        server.login(sender, password)
+        server.sendmail(sender, sender, msg.as_string())
+        server.quit()
+
+        st.success("✅ Email sent!")
+
+    except Exception as e:
+        st.error(f"❌ Email Error: {e}")
 
 # =============================
 # IP Location
