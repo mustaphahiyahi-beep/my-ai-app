@@ -1,48 +1,22 @@
-import hashlib
-import requests
-import streamlit as st
 import smtplib
 from email.mime.text import MIMEText
 
-# 🦠 Malware Scanner
-def scan_file(file):
-    content = file.read()
-    file_hash = hashlib.md5(content).hexdigest()
+def send_email(subject, message):
+    sender = st.secrets["EMAIL"]
+    password = st.secrets["EMAIL_PASSWORD"]
+    receiver = sender  # ترسل لنفسك
 
-    if b"virus" in content:
-        return "Malicious"
-    return "Safe"
+    msg = MIMEText(message)
+    msg["Subject"] = subject
+    msg["From"] = sender
+    msg["To"] = receiver
 
-# 📩 Telegram
-def send_telegram_alert(message):
     try:
-        token = st.secrets["TELEGRAM_TOKEN"]
-        chat_id = st.secrets["TELEGRAM_CHAT_ID"]
-
-        requests.post(
-            f"https://api.telegram.org/bot{token}/sendMessage",
-            data={"chat_id": chat_id, "text": message}
-        )
-    except:
-        pass
-
-# 📧 Email
-def send_email_alert(message):
-    try:
-        sender = st.secrets["EMAIL"]
-        password = st.secrets["EMAIL_PASSWORD"]
-
-        msg = MIMEText(message)
-        msg["Subject"] = "🚨 Security Alert"
-        msg["From"] = sender
-        msg["To"] = sender
-
-        with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
-            server.login(sender, password)
-            server.send_message(msg)
-    except:
-        pass
-
-# 🚫 Firewall (محاكاة)
-def block_ip(ip):
-    print(f"[BLOCKED] {ip}")
+        server = smtplib.SMTP("smtp.gmail.com", 587)
+        server.starttls()
+        server.login(sender, password)
+        server.sendmail(sender, receiver, msg.as_string())
+        server.quit()
+        return True
+    except Exception as e:
+        return str(e)
