@@ -71,7 +71,7 @@ def analyze(text):
         threats.append("Brute Force")
         risk += 30
 
-    if risk > 50:
+    if risk > 0:
         send_email(ip, threats, risk)
 
     return ip, threats, risk
