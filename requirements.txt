@@ -1,6 +1,6 @@
 streamlit
 groq
-requests
+flask
 reportlab
 fastapi
 uvicorn
