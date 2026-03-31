@@ -1,30 +1,33 @@
 import streamlit as st
-import firebase_admin
-from firebase_admin import credentials, auth
+import requests
+import json
+import uuid
 
-# ================================
-# Firebase Setup (مرة واحدة فقط)
-# ================================
-if not firebase_admin._apps:
-    cred = credentials.Certificate("firebase_key.json")  # تأكد الملف موجود
-    firebase_admin.initialize_app(cred)
+# =========================
+# 🔐 CONFIG (عدلهم)
+# =========================
+FIREBASE_API_KEY = "PUT_YOUR_FIREBASE_API_KEY_HERE"
+STRIPE_PAYMENT_LINK = "https://buy.stripe.com/test_xxx"  # ضع رابط الدفع
 
-# ================================
-# إعداد الصفحة
-# ================================
 st.set_page_config(page_title="Cyber AI SaaS", layout="centered")
 
 st.title("🛡️ Cyber AI SaaS")
 
-# ================================
-# Menu
-# ================================
-menu = ["Login", "Signup"]
-choice = st.sidebar.selectbox("Menu", menu, key="main_menu")
+# =========================
+# SESSION
+# =========================
+if "user" not in st.session_state:
+    st.session_state.user = None
 
-# ================================
-# SIGNUP
-# ================================
+# =========================
+# MENU
+# =========================
+menu = ["Login", "Signup"]
+choice = st.sidebar.selectbox("Menu", menu, key="menu")
+
+# =========================
+# 🔐 SIGNUP (Firebase)
+# =========================
 if choice == "Signup":
     st.subheader("Create Account")
 
@@ -32,18 +35,24 @@ if choice == "Signup":
     password = st.text_input("Password", type="password", key="signup_pass")
 
     if st.button("Signup", key="signup_btn"):
-        try:
-            user = auth.create_user(
-                email=email,
-                password=password
-            )
-            st.success("Account created successfully ✅")
-        except Exception as e:
-            st.error(f"Error: {e}")
+        url = f"https://identitytoolkit.googleapis.com/v1/accounts:signUp?key={FIREBASE_API_KEY}"
 
-# ================================
-# LOGIN
-# ================================
+        data = {
+            "email": email,
+            "password": password,
+            "returnSecureToken": True
+        }
+
+        res = requests.post(url, data=json.dumps(data))
+
+        if res.status_code == 200:
+            st.success("Account created ✅")
+        else:
+            st.error(res.json())
+
+# =========================
+# 🔑 LOGIN (Firebase REAL)
+# =========================
 elif choice == "Login":
     st.subheader("Login")
 
@@ -51,20 +60,47 @@ elif choice == "Login":
     password = st.text_input("Password", type="password", key="login_pass")
 
     if st.button("Login", key="login_btn"):
-        # ملاحظة: Firebase Admin لا يدعم login مباشر
-        # هذا تسجيل وهمي مؤقت
-        st.session_state["user"] = email
-        st.success("Logged in successfully 🚀")
+        url = f"https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key={FIREBASE_API_KEY}"
 
-# ================================
-# Dashboard (بعد تسجيل الدخول)
-# ================================
-if "user" in st.session_state:
+        data = {
+            "email": email,
+            "password": password,
+            "returnSecureToken": True
+        }
+
+        res = requests.post(url, data=json.dumps(data))
+
+        if res.status_code == 200:
+            st.session_state.user = res.json()
+            st.success("Logged in 🚀")
+        else:
+            st.error("Invalid credentials")
+
+# =========================
+# 📊 DASHBOARD
+# =========================
+if st.session_state.user:
+
     st.write("---")
-    st.subheader(f"Welcome {st.session_state['user']} 👋")
+    st.subheader(f"Welcome {st.session_state.user['email']} 👋")
 
-    st.write("🚀 Dashboard will be here")
+    # 🔑 API KEY
+    if "api_key" not in st.session_state:
+        st.session_state.api_key = str(uuid.uuid4())
 
+    st.write("### 🔑 Your API Key")
+    st.code(st.session_state.api_key)
+
+    # 📊 Fake Analytics
+    st.write("### 📊 Usage")
+    st.metric("Requests Today", "23")
+    st.metric("Threats Blocked", "5")
+
+    # 💳 Stripe Payment
+    st.write("### 💳 Upgrade Plan")
+    st.link_button("Upgrade to Pro 🚀", STRIPE_PAYMENT_LINK)
+
+    # 🚪 Logout
     if st.button("Logout"):
-        del st.session_state["user"]
+        st.session_state.user = None
         st.rerun()
