@@ -186,3 +186,27 @@ if menu == "Analyzer":
             if risk > 50:
                 send_email(f"Attack detected: {ip} - {threat}")
                 st.success("📩 Alert Sent!")
+from flask import Flask, request, jsonify
+import threading
+
+api = Flask(__name__)
+
+@api.route("/alert", methods=["POST"])
+def receive_alert():
+    data = request.json
+
+    ip = data.get("ip", "Unknown")
+    attack = data.get("attack", "Unknown")
+
+    print(f"🚨 Attack from {ip}: {attack}")
+
+    # هنا تربط مع AI
+    send_email(f"Attack detected: {ip} - {attack}")
+
+    return jsonify({"status": "received"})
+
+
+def run_api():
+    api.run(host="0.0.0.0", port=5000)
+
+threading.Thread(target=run_api).start()
