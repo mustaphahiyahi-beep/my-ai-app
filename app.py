@@ -7,15 +7,9 @@ import smtplib
 from email.mime.text import MIMEText
 import re
 import firebase_admin
-from firebase_admin import auth
 
-
-
-st.set_page_config(page_title="Cyber AI SaaS", layout="centered")
 
 st.title("🛡️ Cyber AI SaaS")
-
-# ----------- PAGES -----------
 
 def login_page():
     st.subheader("Login")
@@ -24,7 +18,7 @@ def login_page():
     password = st.text_input("Password", type="password", key="login_pass")
 
     if st.button("Login", key="login_btn"):
-        st.success("Welcome back 🚀")
+        st.success("Welcome 🚀")
 
 
 def signup_page():
@@ -35,6 +29,14 @@ def signup_page():
 
     if st.button("Create Account", key="signup_btn"):
         st.success("Account created ✅")
+
+
+menu = st.selectbox("Choose", ["Login", "Sign Up"])
+
+if menu == "Login":
+    login_page()
+else:
+    signup_page()
 
 
 # ----------- NAVIGATION -----------
