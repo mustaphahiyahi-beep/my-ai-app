@@ -9,13 +9,33 @@ import re
 import firebase_admin
 from firebase_admin import auth
 
+
 st.title("🛡️ Cyber AI SaaS")
+
+def login_page():
+    st.subheader("Login")
+
+    email = st.text_input("Email", key="login_email")
+    password = st.text_input("Password", type="password", key="login_pass")
+
+    if st.button("Login", key="login_btn"):
+        st.success("Welcome back 🚀")
+
+
+def signup_page():
+    st.subheader("Create Account")
+
+    email = st.text_input("Email", key="signup_email")
+    password = st.text_input("Password", type="password", key="signup_pass")
+
+    if st.button("Create Account", key="signup_btn"):
+        st.success("Account created ✅")
+
 
 menu = st.selectbox("Choose", ["Login", "Sign Up"])
 
 if menu == "Login":
     login_page()
-
 elif menu == "Sign Up":
     signup_page()
         
