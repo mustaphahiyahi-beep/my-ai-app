@@ -125,29 +125,18 @@ choice = st.sidebar.selectbox("Menu", menu)
 # ===============================
 # SIGNUP
 # ===============================
-if choice == "Signup":
-    st.subheader("Create Account")
-    email = st.text_input("Email")
-    password = st.text_input("Password", type="password")
+email = st.text_input("Email", key="signup_email")
+password = st.text_input("Password", type="password", key="signup_pass")
 
-    if st.button("Signup"):
-        try:
-            user = auth.create_user(email=email, password=password)
-            st.success("Account created!")
-        except:
-            st.error("Error creating account")
+if st.button("Signup", key="signup_btn"):
 
 # ===============================
 # LOGIN
 # ===============================
-if choice == "Login":
-    st.subheader("Login")
-    email = st.text_input("Email")
-    password = st.text_input("Password", type="password")
+email = st.text_input("Email", key="login_email")
+password = st.text_input("Password", type="password", key="login_pass")
 
-    if st.button("Login"):
-        st.session_state["user"] = email
-        st.success("Logged in!")
+if st.button("Login", key="login_btn"):
 
 # ===============================
 # MAIN APP
