@@ -9,7 +9,19 @@ import re
 import firebase_admin
 
 
+
+st.set_page_config(page_title="Cyber AI SaaS")
+
+# ✅ منع إعادة إنشاء الواجهة مرتين
+if "page" not in st.session_state:
+    st.session_state.page = "Login"
+
 st.title("🛡️ Cyber AI SaaS")
+
+# -------- NAV --------
+menu = st.selectbox("Choose", ["Login", "Sign Up"], key="main_menu")
+
+# -------- PAGES --------
 
 def login_page():
     st.subheader("Login")
@@ -31,11 +43,11 @@ def signup_page():
         st.success("Account created ✅")
 
 
-menu = st.selectbox("Choose", ["Login", "Sign Up"])
-
+# ✅ عرض صفحة واحدة فقط
 if menu == "Login":
     login_page()
-else:
+
+elif menu == "Sign Up":
     signup_page()
 
 
