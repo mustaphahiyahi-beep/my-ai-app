@@ -6,7 +6,31 @@ import datetime
 import smtplib
 from email.mime.text import MIMEText
 import re
+import firebase_admin
+from firebase_admin import auth
 
+st.title("🛡️ Cyber AI SaaS")
+
+menu = st.selectbox("Choose", ["Login", "Sign Up"])
+
+email = st.text_input("Email")
+password = st.text_input("Password", type="password")
+
+if menu == "Sign Up":
+    if st.button("Create Account"):
+        try:
+            user = auth.create_user(
+                email=email,
+                password=password
+            )
+            st.success("Account created successfully ✅")
+        except Exception as e:
+            st.error(f"Error: {e}")
+
+elif menu == "Login":
+    if st.button("Login"):
+        st.success("Logged in successfully 🚀") 
+        
 # ===============================
 # Firebase Setup
 # ===============================
