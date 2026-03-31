@@ -27,7 +27,7 @@ if menu == "Sign Up":
         except Exception as e:
             st.error(f"Error: {e}")
 
-elif menu == "Login":
+if menu == "Login":
     if st.button("Login"):
         st.success("Logged in successfully 🚀") 
         
