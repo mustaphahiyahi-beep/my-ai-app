@@ -41,7 +41,6 @@ else:
 
 # ----------- NAVIGATION -----------
 
-menu = st.selectbox("Choose", ["Login", "Sign Up"])
 
 # ⚠️ هذا هو المهم
 if menu == "Login":
