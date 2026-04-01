@@ -28,27 +28,33 @@ choice = st.sidebar.selectbox("Menu", menu, key="menu")
 # =========================
 # 🔐 SIGNUP (Firebase)
 # =========================
-if choice == "Signup":
-    st.subheader("Create Account")
 
-    email = st.text_input("Email", key="signup_email")
-    password = st.text_input("Password", type="password", key="signup_pass")
+API_KEY = "AIzaSyAkpimXjXJlmK9jg8peVugH4r4Zpz3szis"
 
-    if st.button("Signup", key="signup_btn"):
-        url = f"https://identitytoolkit.googleapis.com/v1/accounts:signUp?key={FIREBASE_API_KEY}"
+st.title("Create Account")
 
-        data = {
+email = st.text_input("Email", key="signup_email")
+password = st.text_input("Password", type="password", key="signup_password")
+
+if st.button("Signup"):
+    if email and password:
+        url = f"https://identitytoolkit.googleapis.com/v1/accounts:signUp?key={API_KEY}"
+
+        payload = {
             "email": email,
             "password": password,
             "returnSecureToken": True
         }
 
-        res = requests.post(url, data=json.dumps(data))
+        res = requests.post(url, json=payload)
+        data = res.json()
 
-        if res.status_code == 200:
-            st.success("Account created ✅")
+        if "error" in data:
+            st.error(data)
         else:
-            st.error(res.json())
+            st.success("Account created successfully 🎉")
+    else:
+        st.warning("Please enter email and password")
 
 # =========================
 # 🔑 LOGIN (Firebase REAL)
