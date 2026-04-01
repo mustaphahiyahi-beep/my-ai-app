@@ -11,7 +11,7 @@ FIREBASE_API_KEY = st.secrets["FIREBASE_API_KEY"]
 GEMINI_API_KEY = st.secrets["GEMINI_API_KEY"]
 
 genai.configure(api_key=GEMINI_API_KEY)
-model = genai.GenerativeModel("gemini-pro")
+model = genai.GenerativeModel("gemini-1.5-flash"
 
 # ==============================
 # SESSION STATE
@@ -20,11 +20,8 @@ model = genai.GenerativeModel("gemini-pro")
 if "user" not in st.session_state:
     st.session_state.user = None
 
-if "api_key" not in st.session_state:
-    st.session_state.api_key = None
-
-if "usage" not in st.session_state:
-    st.session_state.usage = 0
+if "token" not in st.session_state:
+    st.session_state.token = None
 
 # ==============================
 # FUNCTIONS
@@ -84,21 +81,18 @@ with choice[0]:
 # LOGIN
 # ==============================
 
-with choice[1]:
-    st.subheader("Login")
+if st.button("Login"):
+    result = login(email, password)
 
-    email = st.text_input("Email", key="login_email")
-    password = st.text_input("Password", type="password", key="login_pass")
+    if "error" in result:
+        st.error(result["error"]["message"])
+    else:
+        st.session_state.user = result["email"]
+        st.session_state.token = result["idToken"]
+        st.session_state.api_key = generate_api_key()
 
-    if st.button("Login"):
-        result = login(email, password)
-
-        if "error" in result:
-            st.error(result["error"]["message"])
-        else:
-            st.session_state.user = email
-            st.session_state.api_key = generate_api_key()
-            st.success("Logged in 🎉")
+        st.success("Logged in 🎉")
+        st.rerun()
 
 # ==============================
 # DASHBOARD
