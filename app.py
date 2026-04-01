@@ -1,113 +1,143 @@
 import streamlit as st
 import requests
-import random
-import string
+import uuid
+import google.generativeai as genai
 
-API_KEY = "AIzaSyAkpimXjXJlmK9jg8peVugH4r4Zpz3szis"
+# ==============================
+# CONFIG
+# ==============================
 
-# ================= SESSION =================
+FIREBASE_API_KEY = st.secrets["FIREBASE_API_KEY"]
+GEMINI_API_KEY = st.secrets["GEMINI_API_KEY"]
+
+genai.configure(api_key=GEMINI_API_KEY)
+model = genai.GenerativeModel("gemini-pro")
+
+# ==============================
+# SESSION STATE
+# ==============================
+
 if "user" not in st.session_state:
     st.session_state.user = None
 
-# ================= FUNCTIONS =================
+if "api_key" not in st.session_state:
+    st.session_state.api_key = None
+
+if "usage" not in st.session_state:
+    st.session_state.usage = 0
+
+# ==============================
+# FUNCTIONS
+# ==============================
+
 def signup(email, password):
-    url = f"https://identitytoolkit.googleapis.com/v1/accounts:signUp?key={API_KEY}"
-    payload = {
+    url = f"https://identitytoolkit.googleapis.com/v1/accounts:signUp?key={FIREBASE_API_KEY}"
+    data = {
         "email": email,
         "password": password,
         "returnSecureToken": True
     }
-    return requests.post(url, json=payload).json()
+    res = requests.post(url, json=data)
+    return res.json()
 
 def login(email, password):
-    url = f"https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key={API_KEY}"
-    payload = {
+    url = f"https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key={FIREBASE_API_KEY}"
+    data = {
         "email": email,
         "password": password,
         "returnSecureToken": True
     }
-    return requests.post(url, json=payload).json()
+    res = requests.post(url, json=data)
+    return res.json()
 
 def generate_api_key():
-    return "sk-" + "".join(random.choices(string.ascii_letters + string.digits, k=32))
+    return "sk-" + str(uuid.uuid4())
 
-# ================= UI =================
+# ==============================
+# UI
+# ==============================
+
 st.title("🚀 Cyber AI SaaS")
 
-# ================= AUTH =================
-if st.session_state.user is None:
+menu = ["Signup", "Login"]
+choice = st.tabs(menu)
 
-    tab1, tab2 = st.tabs(["Signup", "Login"])
+# ==============================
+# SIGNUP
+# ==============================
 
-    # -------- SIGNUP --------
-    with tab1:
-        st.subheader("Create Account")
+with choice[0]:
+    st.subheader("Create Account")
 
-        with st.form("signup_form"):
-            email = st.text_input("Email")
-            password = st.text_input("Password", type="password")
+    email = st.text_input("Email", key="signup_email")
+    password = st.text_input("Password", type="password", key="signup_pass")
 
-            submit = st.form_submit_button("Signup")
+    if st.button("Signup"):
+        result = signup(email, password)
 
-            if submit:
-                if email.strip() != "" and password.strip() != "":
-                    res = signup(email, password)
+        if "error" in result:
+            st.error(result["error"]["message"])
+        else:
+            st.success("Account created 🎉")
 
-                    if "error" in res:
-                        st.error(res["error"]["message"])
-                    else:
-                        st.success("Account created 🎉")
-                else:
-                    st.warning("Please enter email and password")
+# ==============================
+# LOGIN
+# ==============================
 
-    # -------- LOGIN --------
-    with tab2:
-        st.subheader("Login")
+with choice[1]:
+    st.subheader("Login")
 
-        with st.form("login_form"):
-            email = st.text_input("Email")
-            password = st.text_input("Password", type="password")
+    email = st.text_input("Email", key="login_email")
+    password = st.text_input("Password", type="password", key="login_pass")
 
-            submit = st.form_submit_button("Login")
+    if st.button("Login"):
+        result = login(email, password)
 
-            if submit:
-                if email.strip() != "" and password.strip() != "":
-                    res = login(email, password)
+        if "error" in result:
+            st.error(result["error"]["message"])
+        else:
+            st.session_state.user = email
+            st.session_state.api_key = generate_api_key()
+            st.success("Logged in 🎉")
 
-                    if "error" in res:
-                        st.error(res["error"]["message"])
-                    else:
-                        st.session_state.user = res
-                        st.success("Logged in 🚀")
-                        st.rerun()
-                else:
-                    st.warning("Please enter email and password")
+# ==============================
+# DASHBOARD
+# ==============================
 
-# ================= DASHBOARD =================
-else:
-    st.success(f"Welcome {st.session_state.user['email']} 👋")
+if st.session_state.user:
 
-    st.title("📊 Dashboard")
+    st.success(f"Welcome {st.session_state.user} 👋")
 
-    # API KEY
-    if "api_key" not in st.session_state:
-        st.session_state.api_key = generate_api_key()
+    st.header("📊 Dashboard")
 
     st.subheader("🔑 Your API Key")
     st.code(st.session_state.api_key)
 
-    # AI DEMO
     st.subheader("🤖 AI Tool")
 
     prompt = st.text_area("Ask AI something")
 
-    if st.button("Generate"):
-        if prompt:
-            st.success(f"AI Response: {prompt[::-1]}")
-        else:
-            st.warning("Enter a prompt")
+    # Usage Limit
+    LIMIT = 5
 
-    # LOGOUT
+    if st.session_state.usage >= LIMIT:
+        st.error("Free limit reached 🚫 Upgrade to Pro")
+    else:
+        if st.button("Generate"):
+            if prompt:
+                with st.spinner("Thinking..."):
+                    try:
+                        response = model.generate_content(prompt)
+                        st.success(response.text)
+                        st.session_state.usage += 1
+                        st.info(f"Usage: {st.session_state.usage}/{LIMIT}")
+                    except Exception as e:
+                        st.error(f"Error: {e}")
+            else:
+                st.warning("Enter a prompt")
+
     if st.button("Logout"):
         st.session_state.user = None
+        st.session_state.api_key = None
+        st.session_state.usage = 0
         st.rerun()
