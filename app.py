@@ -1,7 +1,9 @@
 import streamlit as st
 import requests
+import random
+import string
 
-API_KEY = "AIzaSyAkpimXjXJlmK9jg8peVugH4r4Zpz3szis"
+API_KEY = "PUT_YOUR_FIREBASE_API_KEY"
 
 # ================= SESSION =================
 if "user" not in st.session_state:
@@ -26,9 +28,13 @@ def login(email, password):
     }
     return requests.post(url, json=payload).json()
 
+def generate_api_key():
+    return "sk-" + "".join(random.choices(string.ascii_letters + string.digits, k=32))
+
 # ================= UI =================
 st.title("🚀 Cyber AI SaaS")
 
+# ================= AUTH =================
 if st.session_state.user is None:
 
     tab1, tab2 = st.tabs(["Signup", "Login"])
@@ -77,38 +83,31 @@ if st.session_state.user is None:
                 else:
                     st.warning("Please enter email and password")
 
-
-def generate_api_key():
-    return "sk-" + "".join(random.choices(string.ascii_letters + string.digits, k=32))
-
-
 # ================= DASHBOARD =================
 else:
     st.success(f"Welcome {st.session_state.user['email']} 👋")
 
     st.title("📊 Dashboard")
 
-    # إنشاء API KEY إذا لم يكن موجود
+    # API KEY
     if "api_key" not in st.session_state:
         st.session_state.api_key = generate_api_key()
 
     st.subheader("🔑 Your API Key")
     st.code(st.session_state.api_key)
 
-    st.info("Use this API key to access AI services")
-
-    # مثال AI بسيط
+    # AI DEMO
     st.subheader("🤖 AI Tool")
 
     prompt = st.text_area("Ask AI something")
 
     if st.button("Generate"):
         if prompt:
-            st.success(f"AI Response: (demo) → {prompt[::-1]}")
+            st.success(f"AI Response: {prompt[::-1]}")
         else:
             st.warning("Enter a prompt")
 
-    # Logout
+    # LOGOUT
     if st.button("Logout"):
         st.session_state.user = None
         st.rerun()
