@@ -7,8 +7,8 @@ import google.generativeai as genai
 # CONFIG
 # ==============================
 
-FIREBASE_API_KEY = st.secrets["FIREBASE_API_KEY"]
-GEMINI_API_KEY = st.secrets["GEMINI_API_KEY"]
+FIREBASE_API_KEY = st.secrets["AIzaSyAkpimXjXJlmK9jg8peVugH4r4Zpz3szis"]
+GEMINI_API_KEY = st.secrets["AIzaSyCSA8yIA4-QgOHAJTp4iV4tn0PUzx8b9Q8"]
 
 genai.configure(api_key=GEMINI_API_KEY)
 model = genai.GenerativeModel("gemini-pro")
