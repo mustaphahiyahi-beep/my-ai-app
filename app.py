@@ -25,24 +25,26 @@ if "user" not in st.session_state:
 menu = ["Login", "Signup"]
 choice = st.sidebar.selectbox("Menu", menu, key="menu")
 
-# =========================
-# 🔐 SIGNUP (Firebase)
-# =========================
+import streamlit as st
+import requests
 
 API_KEY = "AIzaSyAkpimXjXJlmK9jg8peVugH4r4Zpz3szis"
 
-st.title("Create Account")
+st.title("Cyber AI SaaS")
 
-email = st.text_input("Email", key="signup_email")
-password = st.text_input("Password", type="password", key="signup_password")
+# ================= SIGNUP =================
+st.header("Create Account")
+
+signup_email = st.text_input("Email", key="signup_email")
+signup_password = st.text_input("Password", type="password", key="signup_password")
 
 if st.button("Signup"):
-    if email and password:
+    if signup_email.strip() != "" and signup_password.strip() != "":
         url = f"https://identitytoolkit.googleapis.com/v1/accounts:signUp?key={API_KEY}"
 
         payload = {
-            "email": email,
-            "password": password,
+            "email": signup_email,
+            "password": signup_password,
             "returnSecureToken": True
         }
 
@@ -50,37 +52,39 @@ if st.button("Signup"):
         data = res.json()
 
         if "error" in data:
-            st.error(data)
+            st.error(data["error"]["message"])
         else:
             st.success("Account created successfully 🎉")
+
     else:
         st.warning("Please enter email and password")
 
-# =========================
-# 🔑 LOGIN (Firebase REAL)
-# =========================
-elif choice == "Login":
-    st.subheader("Login")
+# ================= LOGIN =================
+st.header("Login")
 
-    email = st.text_input("Email", key="login_email")
-    password = st.text_input("Password", type="password", key="login_pass")
+login_email = st.text_input("Email", key="login_email")
+login_password = st.text_input("Password", type="password", key="login_password")
 
-    if st.button("Login", key="login_btn"):
-        url = f"https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key={FIREBASE_API_KEY}"
+if st.button("Login"):
+    if login_email.strip() != "" and login_password.strip() != "":
+        url = f"https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key={API_KEY}"
 
-        data = {
-            "email": email,
-            "password": password,
+        payload = {
+            "email": login_email,
+            "password": login_password,
             "returnSecureToken": True
         }
 
-        res = requests.post(url, data=json.dumps(data))
+        res = requests.post(url, json=payload)
+        data = res.json()
 
-        if res.status_code == 200:
-            st.session_state.user = res.json()
-            st.success("Logged in 🚀")
+        if "error" in data:
+            st.error(data["error"]["message"])
         else:
-            st.error("Invalid credentials")
+            st.success("Logged in successfully 🚀")
+
+    else:
+        st.warning("Please enter email and password")
 
 # =========================
 # 📊 DASHBOARD
