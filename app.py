@@ -1,7 +1,6 @@
 import streamlit as st
 import requests
 
-# 🔥 ضع API KEY ديالك هنا
 API_KEY = "AIzaSyAkpimXjXJlmK9jg8peVugH4r4Zpz3szis"
 
 # ================= SESSION =================
@@ -30,7 +29,6 @@ def login(email, password):
 # ================= UI =================
 st.title("🚀 Cyber AI SaaS")
 
-# ================= IF NOT LOGGED =================
 if st.session_state.user is None:
 
     tab1, tab2 = st.tabs(["Signup", "Login"])
@@ -39,62 +37,55 @@ if st.session_state.user is None:
     with tab1:
         st.subheader("Create Account")
 
-        email = st.text_input("Email", key="signup_email")
-        password = st.text_input("Password", type="password", key="signup_password")
+        with st.form("signup_form"):
+            email = st.text_input("Email")
+            password = st.text_input("Password", type="password")
 
-        if st.button("Signup"):
-            if email.strip() and password.strip():
+            submit = st.form_submit_button("Signup")
 
-                res = signup(email, password)
+            if submit:
+                if email.strip() != "" and password.strip() != "":
+                    res = signup(email, password)
 
-                if "error" in res:
-                    st.error(res["error"]["message"])
+                    if "error" in res:
+                        st.error(res["error"]["message"])
+                    else:
+                        st.success("Account created 🎉")
                 else:
-                    st.success("Account created 🎉")
-
-            else:
-                st.warning("Please enter email and password")
+                    st.warning("Please enter email and password")
 
     # -------- LOGIN --------
     with tab2:
         st.subheader("Login")
 
-        email = st.text_input("Email", key="login_email")
-        password = st.text_input("Password", type="password", key="login_password")
+        with st.form("login_form"):
+            email = st.text_input("Email")
+            password = st.text_input("Password", type="password")
 
-        if st.button("Login"):
-            if email.strip() and password.strip():
+            submit = st.form_submit_button("Login")
 
-                res = login(email, password)
+            if submit:
+                if email.strip() != "" and password.strip() != "":
+                    res = login(email, password)
 
-                if "error" in res:
-                    st.error(res["error"]["message"])
+                    if "error" in res:
+                        st.error(res["error"]["message"])
+                    else:
+                        st.session_state.user = res
+                        st.success("Logged in 🚀")
+                        st.rerun()
                 else:
-                    st.session_state.user = res
-                    st.success("Logged in 🚀")
-                    st.rerun()
-
-            else:
-                st.warning("Please enter email and password")
+                    st.warning("Please enter email and password")
 
 # ================= DASHBOARD =================
 else:
     st.success(f"Welcome {st.session_state.user['email']} 👋")
 
-    st.header("📊 Dashboard")
+    st.header("Dashboard")
 
-    st.write("Your user info:")
+    st.write("User info:")
     st.json(st.session_state.user)
 
-    # 🔑 API KEY وهمي لكل مستخدم (نطورها لاحقاً)
-    st.subheader("🔑 Your API Key")
-    st.code(f"API-{st.session_state.user['localId']}")
-
-    # 💳 Placeholder للدفع (Stripe لاحقاً)
-    st.subheader("💳 Subscription")
-    st.info("Upgrade to Pro (Stripe integration next step)")
-
-    # 🔴 LOGOUT
     if st.button("Logout"):
         st.session_state.user = None
         st.rerun()
