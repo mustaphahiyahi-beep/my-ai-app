@@ -6,3 +6,4 @@ reportlab
 fastapi
 uvicorn
 requests
+google-generativeai
