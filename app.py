@@ -77,8 +77,6 @@ if st.session_state.user is None:
                 else:
                     st.warning("Please enter email and password")
 
-import random
-import string
 
 def generate_api_key():
     return "sk-" + "".join(random.choices(string.ascii_letters + string.digits, k=32))
