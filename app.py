@@ -3,7 +3,7 @@ import requests
 import random
 import string
 
-API_KEY = "PUT_YOUR_FIREBASE_API_KEY"
+API_KEY = "AIzaSyAkpimXjXJlmK9jg8peVugH4r4Zpz3szis"
 
 # ================= SESSION =================
 if "user" not in st.session_state:
