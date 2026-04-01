@@ -1,116 +1,100 @@
 import streamlit as st
 import requests
-import json
-import uuid
 
-# =========================
-# 🔐 CONFIG (عدلهم)
-# =========================
-FIREBASE_API_KEY = "AIzaSyAkpimXjXJlmK9jg8peVugH4r4Zpz3szis"
-STRIPE_PAYMENT_LINK = "https://buy.stripe.com/test_xxx"  # ضع رابط الدفع
+# 🔥 ضع API KEY ديالك هنا
+API_KEY = "AIzaSyAkpimXjXJlmK9jg8peVugH4r4Zpz3szis"
 
-st.set_page_config(page_title="Cyber AI SaaS", layout="centered")
-
-st.title("🛡️ Cyber AI SaaS")
-
-# =========================
-# SESSION
-# =========================
+# ================= SESSION =================
 if "user" not in st.session_state:
     st.session_state.user = None
 
-# =========================
-# MENU
-# =========================
-menu = ["Login", "Signup"]
-choice = st.sidebar.selectbox("Menu", menu, key="menu")
+# ================= FUNCTIONS =================
+def signup(email, password):
+    url = f"https://identitytoolkit.googleapis.com/v1/accounts:signUp?key={API_KEY}"
+    payload = {
+        "email": email,
+        "password": password,
+        "returnSecureToken": True
+    }
+    return requests.post(url, json=payload).json()
 
-import streamlit as st
-import requests
+def login(email, password):
+    url = f"https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key={API_KEY}"
+    payload = {
+        "email": email,
+        "password": password,
+        "returnSecureToken": True
+    }
+    return requests.post(url, json=payload).json()
 
-API_KEY = "AIzaSyAkpimXjXJlmK9jg8peVugH4r4Zpz3szis"
+# ================= UI =================
+st.title("🚀 Cyber AI SaaS")
 
-st.title("Cyber AI SaaS")
+# ================= IF NOT LOGGED =================
+if st.session_state.user is None:
 
-# ================= SIGNUP =================
-st.header("Create Account")
+    tab1, tab2 = st.tabs(["Signup", "Login"])
 
-signup_email = st.text_input("Email", key="signup_email")
-signup_password = st.text_input("Password", type="password", key="signup_password")
+    # -------- SIGNUP --------
+    with tab1:
+        st.subheader("Create Account")
 
-if st.button("Signup"):
-    if signup_email.strip() != "" and signup_password.strip() != "":
-        url = f"https://identitytoolkit.googleapis.com/v1/accounts:signUp?key={API_KEY}"
+        email = st.text_input("Email", key="signup_email")
+        password = st.text_input("Password", type="password", key="signup_password")
 
-        payload = {
-            "email": signup_email,
-            "password": signup_password,
-            "returnSecureToken": True
-        }
+        if st.button("Signup"):
+            if email.strip() and password.strip():
 
-        res = requests.post(url, json=payload)
-        data = res.json()
+                res = signup(email, password)
 
-        if "error" in data:
-            st.error(data["error"]["message"])
-        else:
-            st.success("Account created successfully 🎉")
+                if "error" in res:
+                    st.error(res["error"]["message"])
+                else:
+                    st.success("Account created 🎉")
 
-    else:
-        st.warning("Please enter email and password")
+            else:
+                st.warning("Please enter email and password")
 
-# ================= LOGIN =================
-st.header("Login")
+    # -------- LOGIN --------
+    with tab2:
+        st.subheader("Login")
 
-login_email = st.text_input("Email", key="login_email")
-login_password = st.text_input("Password", type="password", key="login_password")
+        email = st.text_input("Email", key="login_email")
+        password = st.text_input("Password", type="password", key="login_password")
 
-if st.button("Login"):
-    if login_email.strip() != "" and login_password.strip() != "":
-        url = f"https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key={API_KEY}"
+        if st.button("Login"):
+            if email.strip() and password.strip():
 
-        payload = {
-            "email": login_email,
-            "password": login_password,
-            "returnSecureToken": True
-        }
+                res = login(email, password)
 
-        res = requests.post(url, json=payload)
-        data = res.json()
+                if "error" in res:
+                    st.error(res["error"]["message"])
+                else:
+                    st.session_state.user = res
+                    st.success("Logged in 🚀")
+                    st.rerun()
 
-        if "error" in data:
-            st.error(data["error"]["message"])
-        else:
-            st.success("Logged in successfully 🚀")
+            else:
+                st.warning("Please enter email and password")
 
-    else:
-        st.warning("Please enter email and password")
+# ================= DASHBOARD =================
+else:
+    st.success(f"Welcome {st.session_state.user['email']} 👋")
 
-# =========================
-# 📊 DASHBOARD
-# =========================
-if st.session_state.user:
+    st.header("📊 Dashboard")
 
-    st.write("---")
-    st.subheader(f"Welcome {st.session_state.user['email']} 👋")
+    st.write("Your user info:")
+    st.json(st.session_state.user)
 
-    # 🔑 API KEY
-    if "api_key" not in st.session_state:
-        st.session_state.api_key = str(uuid.uuid4())
+    # 🔑 API KEY وهمي لكل مستخدم (نطورها لاحقاً)
+    st.subheader("🔑 Your API Key")
+    st.code(f"API-{st.session_state.user['localId']}")
 
-    st.write("### 🔑 Your API Key")
-    st.code(st.session_state.api_key)
+    # 💳 Placeholder للدفع (Stripe لاحقاً)
+    st.subheader("💳 Subscription")
+    st.info("Upgrade to Pro (Stripe integration next step)")
 
-    # 📊 Fake Analytics
-    st.write("### 📊 Usage")
-    st.metric("Requests Today", "23")
-    st.metric("Threats Blocked", "5")
-
-    # 💳 Stripe Payment
-    st.write("### 💳 Upgrade Plan")
-    st.link_button("Upgrade to Pro 🚀", STRIPE_PAYMENT_LINK)
-
-    # 🚪 Logout
+    # 🔴 LOGOUT
     if st.button("Logout"):
         st.session_state.user = None
         st.rerun()
