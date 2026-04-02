@@ -11,7 +11,11 @@ FIREBASE_API_KEY = st.secrets["FIREBASE_API_KEY"]
 GEMINI_API_KEY = st.secrets["GEMINI_API_KEY"]
 
 
+
+
 client = genai.Client(api_key=GEMINI_API_KEY)
+
+prompt = st.text_input("اكتب سؤالك")
 
 if st.button("Generate"):
     response = client.models.generate_content(
