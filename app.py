@@ -10,8 +10,10 @@ import google.generativeai as genai
 FIREBASE_API_KEY = st.secrets["FIREBASE_API_KEY"]
 GEMINI_API_KEY = st.secrets["GEMINI_API_KEY"]
 
+
 genai.configure(api_key=GEMINI_API_KEY)
-model = genai.GenerativeModel("gemini-1.0-pro")
+
+model = genai.GenerativeModel("gemini-1.5-flash-latest")
 
 # ==============================
 # SESSION
