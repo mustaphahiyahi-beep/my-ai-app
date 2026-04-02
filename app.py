@@ -27,28 +27,28 @@ if "token" not in st.session_state:
 # FUNCTIONS
 # ==============================
 
-def signup(email, password):
-    url = f"https://identitytoolkit.googleapis.com/v1/accounts:signUp?key={FIREBASE_API_KEY}"
-    data = {
-        "email": email,
-        "password": password,
-        "returnSecureToken": True
-    }
-    res = requests.post(url, json=data)
-    return res.json()
 
-def login(email, password):
-    url = f"https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key={FIREBASE_API_KEY}"
-    data = {
-        "email": email,
-        "password": password,
-        "returnSecureToken": True
-    }
-    res = requests.post(url, json=data)
-    return res.json()
+# اختيار الصفحة
+menu = st.radio("Choose", ["Login", "Signup"])
 
-def generate_api_key():
-    return "sk-" + str(uuid.uuid4())
+email = st.text_input("Email")
+password = st.text_input("Password", type="password")
+
+# ---------------- SIGNUP ----------------
+if menu == "Signup":
+    if st.button("Signup"):
+        if email and password:
+            st.success("Account created (fake demo)")
+        else:
+            st.error("Please enter email and password")
+
+# ---------------- LOGIN ----------------
+if menu == "Login":
+    if st.button("Login"):
+        if email and password:
+            st.success("Logged in successfully")
+        else:
+            st.error("Email or password missing")
 
 # ==============================
 # UI
