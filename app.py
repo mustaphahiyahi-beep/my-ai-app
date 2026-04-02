@@ -59,54 +59,46 @@ st.title("🚀 Cyber AI SaaS")
 
 menu = st.radio("Choose", ["Login", "Signup"])
 
-email = st.text_input("Email", key="email_input")
-password = st.text_input("Password", type="password", key="password_input")
+# ================= FORM =================
+with st.form("auth_form"):
 
-# ==============================
-# SIGNUP
-# ==============================
+    email = st.text_input("Email")
+    password = st.text_input("Password", type="password")
 
-if menu == "Signup":
-    if st.button("Signup", key="signup_btn"):
-        if not email or not password:
-            st.error("❌ Please enter email and password")
-        else:
+    submit = st.form_submit_button(
+        "Login" if menu == "Login" else "Signup"
+    )
+
+# ================= ACTION =================
+
+if submit:
+
+    if not email or not password:
+        st.error("❌ Please enter email and password")
+
+    else:
+
+        # -------- SIGNUP --------
+        if menu == "Signup":
             result = signup(email, password)
 
             if "error" in result:
-                msg = result["error"]["message"]
-                if msg == "EMAIL_EXISTS":
-                    st.error("📧 هذا الإيميل مسجل بالفعل")
-                else:
-                    st.error(msg)
+                st.error(result["error"]["message"])
             else:
-                st.success("🎉 Account created successfully!")
+                st.success("🎉 Account created!")
 
-# ==============================
-# LOGIN
-# ==============================
-
-if menu == "Login":
-    if st.button("Login", key="login_btn"):
-        if not email or not password:
-            st.error("❌ Email and password required")
-        else:
+        # -------- LOGIN --------
+        if menu == "Login":
             result = login(email, password)
 
             if "error" in result:
-                msg = result["error"]["message"]
-                if msg == "INVALID_PASSWORD":
-                    st.error("❌ كلمة المرور غير صحيحة")
-                elif msg == "EMAIL_NOT_FOUND":
-                    st.error("❌ الحساب غير موجود")
-                else:
-                    st.error(msg)
+                st.error(result["error"]["message"])
             else:
                 st.session_state.user = result["email"]
                 st.session_state.api_key = generate_api_key()
-                st.success("🎉 Logged in successfully!")
-                st.rerun()
 
+                st.success("🎉 Logged in!")
+                st.rerun()
 # ==============================
 # DASHBOARD
 # ==============================
