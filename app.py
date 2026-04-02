@@ -1,7 +1,7 @@
 import streamlit as st
 import requests
 import uuid
-import google.generativeai as genai
+from google import genai
 
 # ==============================
 # CONFIG
@@ -11,9 +11,15 @@ FIREBASE_API_KEY = st.secrets["FIREBASE_API_KEY"]
 GEMINI_API_KEY = st.secrets["GEMINI_API_KEY"]
 
 
-genai.configure(api_key=GEMINI_API_KEY)
+client = genai.Client(api_key=GEMINI_API_KEY)
 
-model = genai.GenerativeModel("gemini-1.5-flash-latest")
+if st.button("Generate"):
+    response = client.models.generate_content(
+        model="gemini-1.5-flash",
+        contents=prompt,
+    )
+
+    st.write(response.text)
 
 # ==============================
 # SESSION
